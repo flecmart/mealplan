@@ -12,6 +12,7 @@ services:
   app:
     container_name: mealplan
     build: app
+    env_file: database.conf
     ports:
       - 5000:5000
     depends_on:

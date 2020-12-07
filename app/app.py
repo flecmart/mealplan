@@ -22,5 +22,4 @@ def fetch():
         all_cats.append(new_cat)
     return json.dumps(all_cats), 200
 
-
 # todo create routes for data examples
