@@ -6,14 +6,28 @@ Custom Mealplanning and recipe management.
 
 In our household we need an overview of our recipes and a calendar that we can plan our meals within the next week(s).
 
-## Build
+## Install
 
-TODO fix flask entrypoint and get basic example running
+Dependencies:
+  
+- docker
+- docker-compose 
 
-## Use Cases
+Clone the repository:
 
-- TODO: Provide db with recipes
-  - ingredients, description, image, ...
-- TODO: Provide calendar where recipes can be assigend
-- Maybe: use some kind of recipe api to search and add recipes
-- Mabye: export ingredients in our todoist shopping list
+```
+git clone https://github.com/flecmart/mealplan.git
+```
+
+Build and run with docker compose:
+
+```
+cd mealplan
+docker-compose up -d
+```
+
+The app is now reachable at `localhost:5000`
+
+## Development
+
+https://trello.com/b/k5LUVCYC/mealplan
