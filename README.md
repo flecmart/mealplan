@@ -17,4 +17,3 @@ TODO fix flask entrypoint and get basic example running
 - TODO: Provide calendar where recipes can be assigend
 - Maybe: use some kind of recipe api to search and add recipes
 - Mabye: export ingredients in our todoist shopping list
-
