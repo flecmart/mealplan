@@ -1,0 +1,122 @@
+{% extends 'base.html' %}
+
+
+{% block content %}
+
+
+<div id="background"></div>
+
+
+
+
+
+<div class="container" style="background-color:rgba(10, 10, 10, 0.9); margin-top: 5px; color: white; max-width: 82%;">
+
+    <!-- Display 'SAVE RECIPE' button if not in db -->
+    {% if new %}
+        <div class="row">
+            <div style="text-align: center;">
+                <div style="margin: 5px; display: inline-block;">
+                    <form action="{{ url_for('save_recipe') }}" method="post">
+                        <input type="hidden" name="name" value="{{ recipe.name }}"/>
+                        <input type="hidden" name="time" value="{{ recipe.time }}"/>
+                        <input type="hidden" name="ingredients" value="{{ recipe.ingredients }}"/>
+                        <input type="hidden" name="instructions" value="{{ recipe.instructions }}"/>
+                        <input type="submit" class="button5" value="Save Recipe"/>
+                    </form>
+                </div>
+                
+                <div style="margin: 5px; display: inline-block;">
+                    <form>
+                        <a href="/full-calendar"><input class="button5" type="button" name="button5" value="Calendar"/></a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+
+    <!--  close modal button  -->
+    {% if not button_flag and not new %}
+        <div>
+            <button style="color: #fff; float: right;" type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span style="text-shadow: none; color: white;" aria-hidden="true">
+                    &times;
+                </span>
+            </button>
+        </div>
+    {% endif %}
+
+
+    <!-- remove meal from calendar -->
+    {% if recipe_date %}
+        <form style="text-align: center;" action="/remove-meal" method="post">
+            <input type="hidden" name="dinner_to_remove" value="{{ recipe_date }}">
+            <input class="button5" style="color:black; margin-top: 2%;" type="submit" id="remove" value="Remove"/>
+        </form>
+    {% endif %}
+
+    
+    
+
+    
+    <!--  LINK to COOKBOOK and DELETE RECIPE button  -->
+    {% if button_flag %}
+        <div class="row">
+            <div style="text-align: center;">
+                <!-- link to recipe index page -->
+                <div style="margin: 5px; display: inline-block;">
+                    <form style="color:black;">
+                        <a href="/recipe-index"><input class="button5" type="button" name="button5" value="Cookbook"/></a>
+                    </form>
+                </div>
+        
+                <!-- DELETE RECIPE from cookbook -->
+                <div style="margin: 5px; display: inline-block;">
+                    <form style="color:black;" action="{{ url_for('delete_recipe') }}" method="post">
+                        <input type="hidden" name="id" value="{{ recipe.id }}"/>
+                        <input  style="display: inline-block; position: relative;" type="submit" class="button5" value="Delete"/>
+                    </form>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+    
+    <h1 class="recipe-text-responsive" style="text-align: center;">{{ recipe.name }}</h1>
+
+    <!--   recipe information    -->
+    
+    {% if recipe.time <= 60 %}
+        <h3 class="recipe-text-responsive" style="text-align: center;">Estimated time: <em>{{ recipe.time }} minutes</em></h3>
+    {% else %}
+        {% set recipe_hour = recipe.time//60 %}
+        {% set recipe_mins = recipe.time%60 %}
+        {% if not recipe_mins %}
+            <h3 class="recipe-text-responsive">Estimated time: <em>{{ recipe_hour }} hours</em></h3>
+        {% else %}
+            <h3 class="recipe-text-responsive">Estimated time: <em>{{ recipe_hour }} hours : {{ recipe_mins }} minutes</em></h3>
+        {% endif %}
+    {% endif %}
+
+
+
+    <h3 class="recipe-text-responsive">Ingredients:</h3>
+    {% for ingredient in ingredients %}
+    <ul>
+        
+        <li>{{ ingredient }}</li>
+    
+    </ul>
+    {% endfor %}
+    
+    <h3 class="recipe-text-responsive">Instructions:</h3>
+    {% for step in instructions %}
+    <ul style="list-style-type:none">
+    <h4 id="recipe-instructions-responsive"><li>{{ loop.index }}. {{ step }}.</li></h4>
+    </ul>
+    {% endfor %}
+    
+</div>
+
+
+{% endblock %}

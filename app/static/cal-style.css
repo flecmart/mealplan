@@ -1,0 +1,24 @@
+.body {
+    background-color: cornflowerblue;
+    background-image: url(/static/images/splash-background.jpeg) ;
+    background-position: center center;
+    background-repeat:  no-repeat;
+    background-attachment: fixed;
+    background-size:  cover;
+    background-color: #999;
+}
+
+#calendar {
+    background-color: beige;
+}
+
+/* Begin Flash Messages */
+.negative {
+    color: red;
+    font-size: 3rem;
+}
+.positive {
+    color: green;
+    font-size: 3rem;
+}
+/* End Flash Messages */

@@ -21,7 +21,7 @@ class Recipe(db.Model):
     def get_ingredients_list(self):
         return self.ingredients.split(',')
 
-class PlannedMeal(db.Model):
+class Event(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     fk_recipe = db.Column(db.Integer, db.ForeignKey('recipe.id')) 
     date = db.Column(db.Date)

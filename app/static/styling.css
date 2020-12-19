@@ -1,0 +1,478 @@
+h2 {
+    text-align: center;
+    font-family: Cambria, Cochin, Georgia, Times, Times New Roman, serif
+}
+.body {
+    background-image: url(/static/images/splash-background-compressed-2.jpeg) ;
+    background-position: center center;
+    background-repeat:  no-repeat;
+    background-attachment: fixed;
+    background-size:  cover;
+    height: 100%;
+}
+
+html {
+    height: 100%;
+}
+
+
+/*--------FLASH MESSAGES--------*/
+
+.negative {
+    color: red;
+    font-size: 4rem;
+    text-shadow: 2px 2px 3px rgb(236, 236, 225);
+}
+.positive {
+    color: green;
+    font-size: 4rem;
+    text-shadow: 2px 2px 3px rgba(51, 211, 118, 0.993);
+}
+
+
+
+/*--------HELP POPUP--------*/
+
+.popup-help {
+    position: relative;
+    display: inline-block;
+    cursor: pointer;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+/* The actual popup */
+
+.popup-help .help-popup {
+    visibility: hidden;
+    width: 350px;
+    background-color: rgba(10, 10, 10, 0.778);
+    color: #fff;
+    text-align: left;
+    border-radius: 12px;
+    padding: 8px;
+    position: relative;
+    z-index: 1;
+    bottom: -100%;
+    left: -120%;
+}
+
+
+/* Toggle this class - hide and show the popup */
+.popup-help .show {
+    visibility: visible;
+    -webkit-animation: fadeIn .5s;
+    animation: fadeIn .5s;
+}
+
+
+
+
+/*--------ABOUT POPUP--------*/
+.popup {
+    position: relative;
+    display: inline-block;
+    cursor: pointer;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+/* The actual popup */
+.popup .popuptext {
+    visibility: hidden;
+    width: 240px;
+    background-color: rgba(10, 10, 10, 0.778);
+    color: #fff;
+    text-align: center;
+    border-radius: 12px;
+    padding: 8px;
+    position: absolute;
+    z-index: 1;
+    bottom: -500%;
+    left: -30%;
+}
+
+
+
+/* Toggle this class - hide and show the popup */
+.popup .show {
+    visibility: visible;
+    -webkit-animation: fadeIn .5s;
+    animation: fadeIn .5s;
+}
+
+/* Add animation (fade in the popup) */
+@-webkit-keyframes fadeIn {
+    from {opacity: 0;} 
+    to {opacity: 1;}
+}
+
+@keyframes fadeIn {
+    from {opacity: 0;}
+    to {opacity: 1;}
+}
+
+
+
+
+/*--------ABOUT BUTTON--------*/
+
+.about-button {
+  height: 40px;
+  width: 150px;
+  border: 0;
+  outline: 0;
+  text-align: center;
+  background: rgba(253, 253, 253, 0.775);
+  border: 2px solid black;
+  border-radius: 6px;
+  font-family: 'Georgia';
+  font-size: 22px;
+  font-weight: 750;
+  color: #000;
+  transition: 300ms;
+  padding-top: 2px;
+}
+
+.about-button:hover {
+  color: rgb(4, 23, 199);
+  font-weight: 750;
+}
+
+
+
+
+
+/*--------SPLASH BUTTONS-------- */
+
+.all-buttons {
+    width: 300px;
+    margin: auto;
+    padding-top: 8%;
+  }
+
+.button-wrapper {
+    margin: 20px 0 0 75px;
+    position: relative;
+    display: inline-block;
+  }
+
+.button5 {
+    height: 40px;
+    width: 150px;
+    border: 0;
+    outline: 0;
+    background: rgba(253, 253, 253, 0.775);
+    border: 2px solid black;
+    border-radius: 6px;
+    font-family: 'Georgia';
+    font-size: 22px;
+    font-weight: 750;
+    color: #000;
+    transition: 300ms;
+    opacity: 1;
+    }
+
+.button5:hover {
+    color: rgb(4, 23, 199);
+    font-weight: 750;
+    opacity: 1;
+    }
+  
+
+
+  
+  /*--------LOGIN & SIGN UP--------*/
+
+#form-container {
+    margin-top: 8%;
+}
+
+.form-wrap {
+width: 40%;
+margin: 0 auto;
+background-color:rgba(10, 10, 10, 0.678);
+}
+
+.control-label {
+    color: #fff;
+}
+
+.form-inner {
+    /*margin: 5%;*/
+    padding: 5%;
+}
+
+
+#signup-link {
+    color: rgb(64, 179, 255);
+}
+
+#login-title {
+    color: #fff;
+    font-size: 28px;
+}
+
+
+/*--------OPTIONS DROPDOWN MENU--------*/
+
+.help-button-wrapper {
+    margin-top: 2%;
+  }
+
+.dropdown-menu > li > a:hover {
+    background-color: rgb(175, 175, 175);
+} 
+
+.container-fluid {
+    margin: 1%;
+}
+
+.dropdown-menu {
+    max-width: 150px;
+}
+
+
+/*--------SEARCH TEMPLATE--------*/
+
+#search-title {
+    color: #fff;
+    font-size: 28px;
+}
+
+.search-button {
+    margin-left: 5%;
+    margin-right: auto;
+    margin-top: 1%;
+}
+
+.search-form-wrap {
+    width: 50%;
+    margin: 0 auto;
+    padding: 15px;
+    background-color:rgba(10, 10, 10, 0.678);
+}
+
+#recipe-img {
+    width: 60%;
+}
+
+/*--------Recipe Index Page--------*/
+
+#index-container {
+    max-width: 50%;
+}
+
+
+.fc-day-grid-event .fc-content {
+    white-space: normal;
+    text-align: center;
+    line-height: 1.1;
+}
+
+#recipe-add {
+    width: 300px; 
+    margin-top: 5px;
+}
+
+
+/*--------HELP POPUP--------*/
+#myPopup {
+    font-size: 16px;
+    margin-left: -20%;
+}
+
+
+/*--------MEDIA QUERIES--------*/
+
+@media screen and (max-width: 1380px) {
+    .dropdown-menu {
+        margin-left: 8px;
+    }
+    .fc-event {
+        font-size: 1em;
+    }
+
+}
+
+@media screen and (max-width: 1152px) {
+    .dropdown-menu {
+        margin-left: -8px;
+    }
+}
+
+@media screen and (max-width: 1048px) {
+    .dropdown-menu {
+        margin-left: -8px;
+    }
+}
+
+@media screen and (max-width: 991px) {
+    .dropdown-menu {
+        margin-left: 40%;
+    }
+    .search-button {
+        margin-left: 0;
+    }
+    .search-form-wrap {
+        width: 75%;
+        background-color:rgba(10, 10, 10, 0.678);
+    }
+    #recipe-index {
+        text-align: center;
+    }
+    #ingred-list {
+        margin-left: 25%;
+    }
+    #myPopup {
+        left: -50%;
+        bottom: -50%;
+    }
+}
+
+@media screen and (max-width: 880px) {
+    .dropdown-menu {
+        margin-left: 38%;
+    }
+}
+
+
+@media screen and (max-width: 745px) {
+    .dropdown-menu {
+        margin-left: 36%;
+    }
+    #ingred-list {
+        margin-left: 18%;
+    }
+}
+
+@media screen and (max-width: 740px) {
+    .form-wrap {
+        width: 60%;
+    }
+}
+
+@media screen and (max-width: 666px) {
+    #index-container {
+        max-width: 85%;
+    }
+    .fc-event {
+        font-size: .95em;
+    }
+}
+
+@media screen and (max-width: 645px) {
+    .dropdown-menu {
+        margin-left: 34%;
+    }
+    #ingred-list {
+        margin-left: 10%;
+    }
+}
+
+@media screen and (max-width: 600px) {
+    .recipe-text-responsive {
+        font-size: 18px;
+    }
+    #recipe-instructions-responsive {
+        font-size: 14px;
+    }
+    .fc-day-number {
+        font-size: 12px;
+    }
+}
+
+@media screen and (max-width: 580px) {
+    .dropdown-menu {
+        margin-left: 32%;
+    }
+}
+
+@media screen and (max-width: 560px) {
+    .search-form-wrap {
+        width:100%;
+        background-color:rgba(10, 10, 10, 0.678);
+    }
+}
+
+@media screen and (max-width: 540px) {
+    #recipe-img {
+        width: 75%;
+    }
+    #ingred-list {
+        margin-left: 5%;
+    }
+}
+
+@media screen and (max-width: 515px) {
+    .dropdown-menu {
+        margin-left: 29%;
+    }
+}
+
+@media screen and (max-width: 450px) {
+    .dropdown-menu {
+        margin-left: 26%;
+    }
+}
+
+@media screen and (max-width: 397px) {
+    .dropdown-menu {
+        margin-left: 23%;
+    }
+    #ingred-list {
+        margin-left: 1%;
+    }
+    .fc-day-number {
+        font-size: 10px;
+    }
+    .fc-event {
+        font-size: .8em;
+    }
+    #myPopup {
+        font-size: 14px;
+        width: 275px;
+        margin-left: 0%;
+    }
+}
+
+@media screen and (max-width: 370px) {
+    .dropdown-menu {
+        margin-left: 20%;
+    }
+    #search-title {
+        font-size: 24px;
+    }
+}
+
+@media screen and (max-width: 360px) {
+    #recipe-add {
+        width: 245px;
+    }
+}
+
+@media screen and (max-width: 340px) {
+    #username-recipe-index {
+        font-size: 30px;
+    }
+    #myPopup {
+        left: -45%;
+    }
+}
+    
+
+
+
+
+
+
+
+
+
+
+
+
