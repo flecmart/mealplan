@@ -1,4 +1,4 @@
-version: '3.5'
+version: '2.1'
 services:
   database:
     container_name: mealplan_db
@@ -8,6 +8,11 @@ services:
       - 5432:5432
     volumes: 
       - db_volume:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   app:
     container_name: mealplan
@@ -16,7 +21,8 @@ services:
     ports:
       - 5000:5000
     depends_on:
-      - database
+      database:
+        condition: service_healthy
 
 volumes:
   db_volume:
