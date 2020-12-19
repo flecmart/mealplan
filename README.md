@@ -31,3 +31,7 @@ The app is now reachable at `localhost:5000`
 ## Development
 
 https://trello.com/b/k5LUVCYC/mealplan
+
+## Inspiration
+
+Some code and ideas are inspired by this project https://github.com/digitaljosh/meal-planner

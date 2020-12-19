@@ -1,0 +1,43 @@
+form {
+    display: none;
+  }
+
+  h1 {
+    display: none;
+  }
+
+  nav {
+    display: none;
+  }
+
+  #calendar-dropdown {
+    display: none;
+  }
+
+  .dropdown {
+    display: none;
+  }
+
+  .button5 {
+    display: none;
+  }
+
+  #about-text {
+    display: none;
+  }
+
+  #about {
+    display: none;
+  }
+
+  .fc th,
+  .fc td,
+  .fc hr,
+  .fc thead,
+  .fc tbody,
+  .fc-row {
+    border-color: #24242465 !important;
+    background: #fff !important; 
+  }
+
+ 

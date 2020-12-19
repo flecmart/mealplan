@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+
+
+
+<div id="index-container" class="container" style="background-color:rgba(10, 10, 10, 0.678); margin-top: 5%; color: white;">
+    <div>
+        <div id="recipe-index" class="row">
+            <h1 id="username-recipe-index" class="col-md-8">Alle Rezepte: </h1>
+            <a style="margin-top: 20px;" class="col-md-4" href="/full-calendar"><input  class="button5" type="button" name="button5" value="Calendar"/></a>
+        </div>
+        <ul style="margin-top: 15px;">
+            {% for recipe in recipes|sort(attribute='name') %}
+                <!-- <li><a href="{{ url_for('display_recipe', recipe_id=recipe.id) }}">{{ recipe.name }} : recipe {{ recipe.id }}</li> -->
+                <li><a href="{{ url_for('display_recipe', recipe_id=recipe.id) }}">{{ recipe.name }}</li>   
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+
+
+{% endblock %}
