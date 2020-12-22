@@ -1,11 +1,14 @@
 import json
 
 from flask import request, flash, render_template
-from sqlalchemy.orm import load_only
 
 from . import create_app
 from . import database
+from . import helper_functs
 from .models import db, Recipe, Event
+
+from .debugger import initialize_flask_server_debugger_if_needed
+initialize_flask_server_debugger_if_needed()
 
 app = create_app()
 IMG_FOLDER = '../img'
@@ -20,10 +23,10 @@ def return_data():
     events = database.query_all(Event)
     all_events = []
     for event in events:
-        recipe = Recipe.query.filter_by(id=event.fk_recipe).first()
+        recipe = Recipe.query.filter_by(id=event.id).first()
         all_events.append({"title":recipe.name, "start":event.date, "id":recipe.id})
     
-    return json.dumps(all_events, ensure_ascii=False)
+    return json.dumps(all_events, default=str)
 
 @app.route('/test', methods=['GET'])
 def show_data():
@@ -54,10 +57,9 @@ def cal_display():
             return render_template('full-calendar.html', recipes=recipes)
 
         date = request.form['date']
-        recipe_name = request.form['name']
+        recipe_id = request.form['name']
 
-        recipe = Recipe.query.options(load_only('id')).filter_by(name=recipe_name).first()
-        database.add_instance(Event, fk_recipe=recipe, date=date)
+        database.add_instance(Event, fk_recipe=recipe_id, date=date)
 
         return render_template('full-calendar.html', recipes=recipes)
     
@@ -81,7 +83,7 @@ def save_recipe():
     if len(name) == 0 or len(ingredients) == 0 or len(instructions) == 0:
         flash('Please fill in Name, Ingredients, and Instructions.', 'negative')
 
-    ingredients = ingredients.splitlines()
+    ingredients = ';'.join(ingredients.splitlines())
 
     same_recipe = Recipe.query.filter_by(name=name).first()
     if same_recipe:
@@ -113,7 +115,7 @@ def display_modal_recipe():
     event = Event.query.filter_by(date=recipe_date).first()
     recipe = Recipe.query.filter_by(id=event.fk_recipe).first()
 
-    return render_template('recipe.html', recipe=recipe, instructions=recipe.instructions, recipe_date=recipe_date, ingredients=recipe.get_ingredients_list())
+    return render_template('recipe.html', recipe=recipe, instructions=recipe.get_instructions(), recipe_date=recipe_date, ingredients=recipe.get_ingredients_list())
 
 
 @app.route("/recipe/<recipe_id>")
@@ -121,7 +123,7 @@ def display_recipe(recipe_id):
     recipe = Recipe.query.filter_by(id=recipe_id).first()
     button_flag = True
     
-    return render_template('recipe.html', recipe=recipe, instructions=recipe.instructions, button_flag=button_flag, ingredients=recipe.get_ingredients_list())
+    return render_template('recipe.html', recipe=recipe, instructions=recipe.get_instructions(), button_flag=button_flag, ingredients=recipe.get_ingredients_list())
 
 @app.route("/recipe-index")
 def display_index():
@@ -135,3 +137,18 @@ def delete_meal_event():
     db.session.commit()
 
     return render_template('full-calendar.html', recipes=database.query_all(Recipe))
+
+@app.route("/ingredients")
+def display_ingredients():
+    """
+    Diplays a list of ingredients for recipes of all events for the current week
+    """
+    events = Event.query.filter(Event.date >= helper_functs.get_start_of_week())
+
+    ingredient_lists = []
+    for event in events:
+        recipe = Recipe.query.filter_by(id=event.id).first()
+        ingredient_lists.append(recipe.get_ingredients_list())
+    
+    # TODO: fix nltk download here
+    return render_template('ingredients.html', ingredients_dict=helper_functs.make_shopping_list(ingredient_lists), start=helper_functs.get_today_string(), end=helper_functs.get_week_from_string())

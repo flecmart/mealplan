@@ -47,7 +47,6 @@
         </div>
     {% endif %}
 
-
     <!-- remove meal from calendar -->
     {% if recipe_date %}
         <form style="text-align: center;" action="/remove-meal" method="post">
@@ -56,10 +55,6 @@
         </form>
     {% endif %}
 
-    
-    
-
-    
     <!--  LINK to COOKBOOK and DELETE RECIPE button  -->
     {% if button_flag %}
         <div class="row">
@@ -98,14 +93,10 @@
         {% endif %}
     {% endif %}
 
-
-
     <h3 class="recipe-text-responsive">Ingredients:</h3>
     {% for ingredient in ingredients %}
     <ul>
-        
         <li>{{ ingredient }}</li>
-    
     </ul>
     {% endfor %}
     

@@ -1,4 +1,5 @@
 import flask_sqlalchemy
+import re
 
 db = flask_sqlalchemy.SQLAlchemy()
 
@@ -19,7 +20,28 @@ class Recipe(db.Model):
         self.image_path = image_path
 
     def get_ingredients_list(self):
-        return self.ingredients.split(',')
+        return self.ingredients.split(';')
+
+    def get_instructions(self):
+        # remove step numbers (digits) if present since they are not ubiquitous in api recipes. Step nums added in template view
+        instructions = re.sub("\d+\.", "", self.instructions)
+        
+        # removes html tags
+        instructions = re.sub("<.*?>", "", instructions)
+
+        # splits string at "." and casts it as list
+        instructions = instructions.split(".")
+
+        # handles cases where parentheses exist in instructions
+        fresh_instructions = []
+        for step in instructions:
+            step = step.replace("(", "").replace(")", "").replace("!", "")
+            fresh_instructions.append(step)  
+
+        # removes empty strings in list
+        fresh_instructions = list(filter(None, fresh_instructions))
+
+        return fresh_instructions
 
 class Event(db.Model):
     id = db.Column(db.Integer, primary_key=True)
