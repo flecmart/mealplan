@@ -67,6 +67,8 @@
 						<li><a class="dropdown-item" data-toggle="modal" data-target="#createRecipeModal" href="#">Neues Rezept</a></li>
 						<div class="divider"></div>
 						<li><a class="dropdown-item" href="/recipe-index">Rezepte anzeigen</a></li>
+						<div class="divider"></div>
+						<li><a class="dropdown-item" href="/ingredients">Zutaten</a></li>
 					</ul>
 				</div>
 				
@@ -94,19 +96,6 @@
 
 <!-- start recipe instructions modal -->
 	<div class="modal fade" id="getCodeModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-		<!--
-		<div class="modal-dialog modal-lg">
-			<div class="modal-content">
-				<div class="modal-header">
-					<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-					<h4 class="modal-title" id="myModalLabel"></h4>
-				</div>
-				<div class="modal-body" id="getCode" style="overflow-x: scroll;">
-					//ajax success content here.
-				</div>
-			</div>
-		</div>
-		-->
 		<div class="modal-body" id="getCode">
 				//ajax success content here.
 		</div>
@@ -138,6 +127,7 @@
 					right: 'month,agendaWeek'
 				},
 				eventClick:  function(event, jsEvent, view) {
+					console.log(event)
 					recipe_name = event.title;
 					recipe_date = event.start;
 					recipe_id = event.id;
@@ -202,9 +192,6 @@
 		
 	</script>
 
-
-
-
 <!-- start ADD MEAL modal--> 
 	<div id="addMeal" class="modal fade">
 		<div class="modal-dialog" style="background-color:rgba(10, 10, 10, 0.9);" class="modal-content">
@@ -227,7 +214,7 @@
 							Meal
 						</label>
 						<div class="col-sm-10">
-							<select id="recipe-add" name="meal">
+							<select id="recipe-add" name="name">
 								{% for recipe in recipes|sort(attribute="name") %}
 									<option value="{{ recipe.id }}">{{ recipe.name }}</option>
 								{% endfor %}
