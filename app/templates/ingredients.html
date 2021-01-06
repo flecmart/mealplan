@@ -2,19 +2,14 @@
 
 {% block content %}
 
-<script
-  src="https://code.jquery.com/jquery-3.3.1.min.js"
-  integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
-  crossorigin="anonymous"></script>
-
 <div class="container" style="background-color:rgba(10, 10, 10, 0.678); margin-top: 5%; color: white; max-width: 70%;">
     <div class="row">
 
-        <h3 style="text-align: center;" class="col-md-6">Ingredients for {{ start }} to {{ end }}:</h3>
+        <h3 style="text-align: center;" class="col-md-6">Zutaten von {{ start }} bis {{ end }}:</h3>
 
         <div style="margin-top: 15px; text-align: center;" class="col-md-6">
-            <a href="/full-calendar"><input class="button5" type="button" name="button5" value="Calendar"/></a>
-            <a style="margin-top: 5px;" href="#"><button style="margin-top: 5px;" class="printBtn hidden-print button5">Print</button></a>
+            <a href="/full-calendar"><input class="button5" type="button" name="button5" value="Kalender"/></a>
+            <a style="margin-top: 5px;" href="#"><button style="margin-top: 5px;" class="printBtn hidden-print button5">Drucken</button></a>
         </div>
 
     </div>
@@ -27,7 +22,6 @@
         {% endfor %}
     </ul>
 </div>
-
 
 <script type="text/javascript">
     $('.printBtn').on('click', function (){

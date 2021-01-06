@@ -32,6 +32,28 @@ The app is now reachable at `localhost:5000`
 
 https://trello.com/b/k5LUVCYC/mealplan
 
+## Recreate DB
+
+Just remove the volume with the following command:
+
+`docker volume rm mealplan_db_volume`
+
+Then restart the app.
+
+## Backup and restore DB
+
+Backup:
+
+`docker exec mealplan_db /usr/bin/pg_dumpall -U postgres > backup.sql`
+
+`docker exec mealplan_db /usr/bin/pg_dumpall -U postgres | gzip -9 > backup.sql.gz`
+
+``docker exec -t your-db-container pg_dumpall -c -U postgres > dump_`date +%d-%m-%Y"_"%H_%M_%S`.sql``
+
+Restore
+
+`cat your_dump.sql | docker exec mealplan_db psql -U postgres`
+
 ## Inspiration
 
 Some code and ideas are inspired by this project https://github.com/digitaljosh/meal-planner

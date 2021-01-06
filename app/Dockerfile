@@ -11,6 +11,7 @@ RUN apk update --no-cache \
 && pip install --no-cache-dir -r requirements.txt \
 && apk del .build-deps
 RUN apk add postgresql-libs libpq --no-cache
+RUN python -c "import nltk; nltk.download('punkt'); nltk.download('averaged_perceptron_tagger')"
 EXPOSE 5000
 COPY . .
 CMD ["flask", "run"]
