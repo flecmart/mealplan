@@ -1,42 +1,42 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        {% block head %}
-        <title>Mealplan</title>
-        
 
-        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
-        <link href="{{ url_for('static', filename='fullcalendar-edit.print.css') }}" rel='stylesheet' media='print' />
-        <link rel="stylesheet" type="text/css" href="/static/styling.css">
-        
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        {% endblock %}
-    </head>
+<head>
+    {% block head %}
+    <title>Mealplan</title>
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"
+	integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"
+	integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
+	crossorigin="anonymous"></script>
+	<script src="{{ url_for('static', filename='lib/moment.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='fullcalendar.min.js') }}"></script>
+	<link href="{{ url_for('static', filename='fullcalendar.min.css') }}" rel='stylesheet' />
+	<link href="{{ url_for('static', filename='fullcalendar-edit.print.css') }}" rel='stylesheet' media='print' />
+    <link rel="stylesheet" type="text/css" href="/static/styling.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+   
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    {% endblock %}
+</head>
 
-    <body class="body">
+<body class="body">
 
-        <!--
-        {% with messages = get_flashed_messages(with_categories=True) %}
-        <ul>
-            {% for category, message in messages %}
-            <li class="{{category}}">{{ message }}</li>
-            {% endfor %}
-        </ul>
-        {% endwith %}
-        -->
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    <!-- Categories: success (green), info (blue), warning (yellow), danger (red) -->
+    {% for category, message in messages %}
+    <div style="text-align: center; width: 100%; color: white; margin-top: -7%; padding: 5px; border: 2px solid rgb(12, 14, 12); background: rgba(10, 10, 10, 0.678); position: absolute;"
+        role="alert">
+        <em>{{ message }}</em>
+    </div>
+    {% endfor %}
+    {% endwith %}
 
-        {% with messages = get_flashed_messages(with_categories=true) %}
-        <!-- Categories: success (green), info (blue), warning (yellow), danger (red) -->
-            {% for category, message in messages %}
-                <div style="text-align: center; width: 100%; color: white; margin-top: -7%; padding: 5px; border: 2px solid rgb(12, 14, 12); background: rgba(10, 10, 10, 0.678); position: absolute;" role="alert">
-                    <em>{{ message }}</em>
-                </div>
-            {% endfor %}
-        {% endwith %}
 
-        
 
-        {% block content %}
-        {% endblock %}
-    </body>
+    {% block content %}
+    {% endblock %}
+</body>
+
 </html>

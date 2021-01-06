@@ -11,6 +11,7 @@ from .debugger import initialize_flask_server_debugger_if_needed
 initialize_flask_server_debugger_if_needed()
 
 app = create_app()
+# TODO
 IMG_FOLDER = '../img'
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif'])
 
@@ -23,7 +24,7 @@ def return_data():
     events = database.query_all(Event)
     all_events = []
     for event in events:
-        recipe = Recipe.query.filter_by(id=event.id).first()
+        recipe = Recipe.query.filter_by(id=event.fk_recipe).first()
         all_events.append({"title":recipe.name, "start":event.date, "id":recipe.id})
     
     return json.dumps(all_events, default=str)
@@ -94,6 +95,14 @@ def save_recipe():
 
     return render_template('full-calendar.html', recipes=database.query_all(Recipe))
 
+@app.route("/edit-recipe",  methods = ['POST'])
+def edit_recipe():
+    recipe_name = request.form["name"]
+    # TODO : get id from name
+    # TODO: udpate db entry
+
+    return render_template('recipe-index.html', recipes=database.query_all(Recipe))
+
 @app.route("/remove-recipe", methods=['POST'])
 def delete_recipe():
     recipe_id = request.form["id"]
@@ -147,8 +156,7 @@ def display_ingredients():
 
     ingredient_lists = []
     for event in events:
-        recipe = Recipe.query.filter_by(id=event.id).first()
+        recipe = Recipe.query.filter_by(id=event.fk_recipe).first()
         ingredient_lists.append(recipe.get_ingredients_list())
     
-    # TODO: fix nltk download here
     return render_template('ingredients.html', ingredients_dict=helper_functs.make_shopping_list(ingredient_lists), start=helper_functs.get_today_string(), end=helper_functs.get_week_from_string())
