@@ -24,22 +24,12 @@ shopping_list = get_todoist_project_id('Einkaufsliste')
 app = create_app()
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif'])
 
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
 @app.route("/")
 def index():
     return render_template('full-calendar.html', recipes=database.query_all(Recipe))
-
-@app.route('/data')
-def return_data():
-    events = database.query_all(Event)
-    all_events = []
-    for event in events:
-        recipe = Recipe.query.filter_by(id=event.fk_recipe).first()
-        if recipe.image:
-            all_events.append({"title":recipe.name, "start":event.date, "id":recipe.id, "imageurl":f"/recipe/{recipe.id}/img"})
-        else:
-            all_events.append({"title":recipe.name, "start":event.date, "id":recipe.id, "imageurl":"/static/images/default.png"})
-    
-    return json.dumps(all_events, default=str)
 
 @app.route('/test', methods=['GET'])
 def show_data():
@@ -59,6 +49,19 @@ def show_data():
         recipe_json.append(new_recipe)
     return json.dumps(recipe_json), 200
 
+@app.route('/data')
+def return_data():
+    events = database.query_all(Event)
+    all_events = []
+    for event in events:
+        recipe = Recipe.query.filter_by(id=event.fk_recipe).first()
+        if recipe.image:
+            all_events.append({"title":recipe.name, "start":event.date, "id":recipe.id, "imageurl":f"/recipe/{recipe.id}/img"})
+        else:
+            all_events.append({"title":recipe.name, "start":event.date, "id":recipe.id, "imageurl":"/static/images/default.png"})
+    
+    return json.dumps(all_events, default=str)
+
 @app.route('/full-calendar', methods=['POST', 'GET'])
 def cal_display():
     if request.method == 'GET':
@@ -77,10 +80,6 @@ def cal_display():
         database.add_instance(Event, fk_recipe=recipe_id, date=date)
 
         return render_template('full-calendar.html', recipes=recipes)
-    
-
-def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 @app.route('/recipe-added', methods=['POST'])
 def save_recipe():
@@ -173,7 +172,6 @@ def display_modal_recipe():
     recipe = Recipe.query.filter_by(id=event.fk_recipe).first()
 
     return render_template('recipe.html', recipe=recipe, instructions=recipe.get_instructions(), recipe_date=recipe_date, ingredients=recipe.get_ingredients_list())
-
 
 @app.route("/recipe/<recipe_id>")
 def display_recipe(recipe_id):
