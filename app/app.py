@@ -22,7 +22,10 @@ def return_data():
     all_events = []
     for event in events:
         recipe = Recipe.query.filter_by(id=event.fk_recipe).first()
-        all_events.append({"title":recipe.name, "start":event.date, "id":recipe.id})
+        if recipe.image:
+            all_events.append({"title":recipe.name, "start":event.date, "id":recipe.id, "imageurl":f"/recipe/{recipe.id}/img"})
+        else:
+            all_events.append({"title":recipe.name, "start":event.date, "id":recipe.id, "imageurl":"/static/images/default.png"})
     
     return json.dumps(all_events, default=str)
 
