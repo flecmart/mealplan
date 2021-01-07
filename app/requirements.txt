@@ -3,3 +3,4 @@ flask-sqlalchemy==2.4.4
 psycopg2==2.8.6
 nltk==3.5
 debugpy
+todoist-python

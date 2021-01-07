@@ -1,6 +1,8 @@
+import os
 import json
 
 from flask import request, flash, render_template
+from todoist.api import TodoistAPI
 from . import create_app
 from . import database
 from . import helper_functs
@@ -8,6 +10,16 @@ from .models import db, Recipe, Event
 
 from .debugger import initialize_flask_server_debugger_if_needed
 initialize_flask_server_debugger_if_needed()
+
+def get_todoist_project_id(name):
+    for project in api.state['projects']:
+        if project['name'] == name:
+            return project['id']
+    return None
+
+api = TodoistAPI(os.environ['TODOIST_TOKEN'])
+api.sync()
+shopping_list = get_todoist_project_id('Einkaufsliste')
 
 app = create_app()
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif'])
@@ -31,6 +43,8 @@ def return_data():
 
 @app.route('/test', methods=['GET'])
 def show_data():
+    #api.items.add('TestFromPython', project_id=shopping_list)
+    #api.commit()
     recipes = database.query_all(Recipe)
     recipe_json = []
     for recipe in recipes:
