@@ -87,6 +87,10 @@
                 $("#editRecipeModal").modal("toggle");
             });
         });
+
+        function formatIngredients(text) {
+            return text.split(";").join("\n");
+        };
     </script>
 
     {% endif %}
@@ -107,6 +111,8 @@
                 Minuten</em></h3>
         {% endif %}
         {% endif %}
+
+        <center><img src="{{ url_for('recipe_image', recipe_id=recipe.id) }}" style="max-width:300px;width:100%" onerror="if (this.src != '/static/images/default.jpeg') this.src = '/static/images/default.jpeg';"></center>
 
         <h3 class="recipe-text-responsive">Zutaten:</h3>
         {% for ingredient in ingredients %}
@@ -145,10 +151,11 @@
             <!-- Modal Body -->
             <div class="modal-body">
 
-                <form class="form-horizontal" action="{{ url_for('edit_recipe') }}" method="post" role="form">
+                <form class="form-horizontal" action="{{ url_for('edit_recipe') }}" method="post" role="form" enctype=multipart/form-data>
                     <div class="form-group">
                         <label class="col-sm-2 control-label" for="inputName">Name</label>
                         <div class="col-sm-10">
+                            <input type="hidden"  name="id" value="{{recipe.id}}">
                             <input name="name" type="text" class="form-control" id="inputName"
                                 value="{{recipe.name}}" />
                         </div>
@@ -163,13 +170,19 @@
                     <div class="form-group">
                         <label class="col-sm-2 control-label" for="inputIngredients">Zutaten</label>
                         <div class="col-sm-10">
-                            <textarea name="ingredients" type="text" class="form-control" id="inputIngredients">{{recipe.ingredients}}</textarea>
+                            <textarea name="ingredients" type="text" class="form-control" id="inputIngredients">{{"\n".join(recipe.ingredients.split(";"))}}</textarea>
                         </div>
                     </div>
                     <div class="form-group">
                         <label class="col-sm-2 control-label" for="inputInstructions">Zubereitung</label>
                         <div class="col-sm-10">
                             <textarea name="instructions" type="text" class="form-control" id="inputInstructions">{{recipe.instructions}}</textarea>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label" for="inputInstructions">Bild</label>
+                        <div class="col-sm-10">
+                            <input type = 'file' class = 'file-input' name = 'image' id = 'image'>
                         </div>
                     </div>
                     <div class="form-group">

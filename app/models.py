@@ -7,17 +7,17 @@ class Recipe(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     ingredients = db.Column(db.Text, nullable=False) # comma separated
-    instructions = db.Column(db.Text, nullable=False) # free text vs csv? TODO: Format text
+    instructions = db.Column(db.Text, nullable=False) # free text
     time = db.Column(db.Integer, nullable=True) # time in minutes
-    image_path = db.Column(db.String(255), nullable=True) # path to potential image in filesystem? TODO: new container mount?
+    image = db.Column(db.LargeBinary, nullable=True) # optional image
     __table_args__ = (db.UniqueConstraint('name', name='_uc_recipe_name'),)
     
-    def __init__(self, name, ingredients, instructions, time, image_path):
+    def __init__(self, name, ingredients, instructions, time, image):
         self.name = name
         self.ingredients = ingredients
         self.instructions = instructions
         self.time = time
-        self.image_path = image_path
+        self.image = image
 
     def get_ingredients_list(self):
         return self.ingredients.split(';')

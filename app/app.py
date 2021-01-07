@@ -1,7 +1,6 @@
 import json
 
 from flask import request, flash, render_template
-
 from . import create_app
 from . import database
 from . import helper_functs
@@ -11,8 +10,6 @@ from .debugger import initialize_flask_server_debugger_if_needed
 initialize_flask_server_debugger_if_needed()
 
 app = create_app()
-# TODO
-IMG_FOLDER = '../img'
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif'])
 
 @app.route("/")
@@ -40,7 +37,7 @@ def show_data():
             "ingredients": recipe.ingredients,
             "instructions": recipe.instructions,
             "time": recipe.time,
-            "image_path": recipe.image_path
+            "image": recipe.image
         }
         recipe_json.append(new_recipe)
     return json.dumps(recipe_json), 200
@@ -54,7 +51,7 @@ def cal_display():
         # displays calendar with updated changes
         recipes = database.query_all(Recipe)
         if recipes == []:
-            flash("Add some recipes to your cookbook.", 'negative')
+            flash("Bitte füge dem Kochbuch Rezepte hinzu.", 'negative')
             return render_template('full-calendar.html', recipes=recipes)
 
         date = request.form['date']
@@ -64,45 +61,79 @@ def cal_display():
 
         return render_template('full-calendar.html', recipes=recipes)
     
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
 @app.route('/recipe-added', methods=['POST'])
 def save_recipe():
     name = request.form['name']
     time = request.form['time']
     ingredients = request.form['ingredients']
     instructions = request.form['instructions']
-    image_path = '' # TODO: define default image
-    # TODO: request image_path
-    # e.g. upload img files: https://stackoverflow.com/questions/44926465/upload-image-in-flask
-    # it should also be able to add images to recipes later on, edit recipes in general
+    image = request.files['image']
 
     if time == '': 
         time = 30 # default in min
-
-    if image_path == '':
-        image_path = 'default'
-
+ 
     if len(name) == 0 or len(ingredients) == 0 or len(instructions) == 0:
-        flash('Please fill in Name, Ingredients, and Instructions.', 'negative')
+        flash('Bitte mindestens Namen, Zutaten und Zubereitung ausfüllen.', 'negative')
+        return render_template('full-calendar.html', recipes=database.query_all(Recipe))
 
     ingredients = ';'.join(ingredients.splitlines())
 
     same_recipe = Recipe.query.filter_by(name=name).first()
     if same_recipe:
-        flash(f'The recipe {name} already exists.', 'negative')
+        flash(f'Das Rezept {name} existiert bereits.', 'negative')
+        return render_template('full-calendar.html', recipes=database.query_all(Recipe))
 
-    database.add_instance(Recipe, name=name, ingredients=str(ingredients), instructions=instructions, time=str(time), image_path=str(image_path))
-    flash(f'Recipe {name} saved.', 'positive')
-
+    # if user does not select file, browser also submit an empty part without filename
+    if image.filename == '':
+        database.add_instance(Recipe, name=name, ingredients=str(ingredients), instructions=instructions, time=str(time), image=None)
+    elif not allowed_file(image.filename):
+        flash(f'Nur folgende Dateiformate für Bilder erlaubt: {ALLOWED_EXTENSIONS}.', 'negative')
+        return render_template('full-calendar.html', recipes=database.query_all(Recipe))
+    else:
+        database.add_instance(Recipe, name=name, ingredients=str(ingredients), instructions=instructions, time=str(time), image=image.read())
+        
+    flash(f'Rezept {name} gespeichert.', 'positive')
     return render_template('full-calendar.html', recipes=database.query_all(Recipe))
 
 @app.route("/edit-recipe",  methods = ['POST'])
 def edit_recipe():
-    recipe_name = request.form["name"]
-    # TODO : get id from name
-    # TODO: udpate db entry
+    recipe_id = int(request.form["id"])
+    name = request.form['name']
+    time = request.form['time']
+    ingredients = request.form['ingredients']
+    instructions = request.form['instructions']
+    image = request.files['image']
 
-    return render_template('recipe-index.html', recipes=database.query_all(Recipe))
+    if time == '': 
+        time = 30 # default in min
+ 
+    if len(name) == 0 or len(ingredients) == 0 or len(instructions) == 0:
+        flash('Bitte mindestens Namen, Zutaten und Zubereitung ausfüllen.', 'negative')
+        return render_template('full-calendar.html', recipes=database.query_all(Recipe))
 
+    ingredients = ';'.join(ingredients.splitlines())
+
+    same_recipe = Recipe.query.filter_by(name=name).first()
+    if same_recipe and same_recipe.id != recipe_id:
+        flash(f'Das Rezept {name} existiert bereits.', 'negative')
+        return render_template('full-calendar.html', recipes=database.query_all(Recipe))
+
+    # if user does not select file, browser also submit an empty part without filename
+    if image.filename == '':
+        database.update_instance(Recipe, recipe_id, name=name, ingredients=str(ingredients), instructions=instructions, time=str(time))
+    elif not allowed_file(image.filename):
+        flash(f'Nur folgende Dateiformate für Bilder erlaubt: {ALLOWED_EXTENSIONS}.', 'negative')
+        return render_template('full-calendar.html', recipes=database.query_all(Recipe))
+    else:
+        database.update_instance(Recipe, recipe_id, name=name, ingredients=str(ingredients), instructions=instructions, time=str(time), image=image.read())
+        
+    flash(f'Rezept {name} gespeichert.', 'positive')
+    return render_template('full-calendar.html', recipes=database.query_all(Recipe))
+    
 @app.route("/remove-recipe", methods=['POST'])
 def delete_recipe():
     recipe_id = request.form["id"]
@@ -133,6 +164,11 @@ def display_recipe(recipe_id):
     button_flag = True
     
     return render_template('recipe.html', recipe=recipe, instructions=recipe.get_instructions(), button_flag=button_flag, ingredients=recipe.get_ingredients_list())
+
+@app.route('/recipe/<recipe_id>/img')
+def recipe_image(recipe_id):
+    recipe = Recipe.query.filter_by(id=recipe_id).first()
+    return app.response_class(recipe.image, mimetype='application/octet-stream')
 
 @app.route("/recipe-index")
 def display_index():
