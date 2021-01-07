@@ -112,7 +112,7 @@
         {% endif %}
         {% endif %}
 
-        <center><img src="{{ url_for('recipe_image', recipe_id=recipe.id) }}" style="max-width:300px;width:100%" onerror="if (this.src != '/static/images/default.jpeg') this.src = '/static/images/default.jpeg';"></center>
+        <center><img src="{{ url_for('recipe_image', recipe_id=recipe.id) }}" style="max-width:250px;width:100%" onerror="if (this.src != '/static/images/default.png') this.src = '/static/images/default.png';"></center>
 
         <h3 class="recipe-text-responsive">Zutaten:</h3>
         {% for ingredient in ingredients %}
