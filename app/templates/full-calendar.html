@@ -224,11 +224,9 @@
 	</div>
 	<!-- end ADD MEAL modal -->
 
-
 	<div id='script-warning'>
 		Error getting data from <code>/data</code> endpoint.
 	</div>
-
 
 	<!-- start CREATE RECIPE modal -->
 
@@ -251,7 +249,7 @@
 				<!-- Modal Body -->
 				<div class="modal-body">
 
-					<form class="form-horizontal" action="{{ url_for('save_recipe') }}" method="post" role="form">
+					<form class="form-horizontal" action="{{ url_for('save_recipe') }}" method="post" role="form" enctype=multipart/form-data>
 						<div class="form-group">
 							<label class="col-sm-2 control-label" for="inputName">Name</label>
 							<div class="col-sm-10">
@@ -277,6 +275,12 @@
 							<div class="col-sm-10">
 								<textarea name="instructions" type="text" class="form-control" id="inputInstructions"
 									placeholder="Schneiden. Würzen. Kochen."></textarea>
+							</div>
+						</div>
+						<div class="form-group">
+							<label class="col-sm-2 control-label" for="inputInstructions">Bild</label>
+							<div class="col-sm-10">
+									<input type = 'file' class = 'file-input' name = 'image' id = 'image'>
 							</div>
 						</div>
 						<div class="form-group">
