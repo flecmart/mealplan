@@ -3,6 +3,7 @@ services:
   database:
     container_name: mealplan_db
     image: postgres:latest
+    restart: always
     env_file: database.conf
     ports:
       - 5432:5432
@@ -17,6 +18,7 @@ services:
   app:
     container_name: mealplan
     build: app
+    restart: always
     env_file: database.conf
     ports:
       - 5000:5000
