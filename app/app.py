@@ -1,15 +1,19 @@
+from .debugger import initialize_flask_server_debugger_if_needed
+initialize_flask_server_debugger_if_needed()
+
 import os
 import json
 
+from datetime import datetime
+from io import BytesIO
+from urllib.request import urlopen
 from flask import request, flash, render_template
+from recipe_scrapers import scrape_me
 from todoist.api import TodoistAPI
 from . import create_app
 from . import database
 from . import helper_functs
 from .models import db, Recipe, Event
-
-from .debugger import initialize_flask_server_debugger_if_needed
-initialize_flask_server_debugger_if_needed()
 
 def get_todoist_project_id(name):
     for project in api.state['projects']:
@@ -81,8 +85,8 @@ def cal_display():
 
         return render_template('full-calendar.html', recipes=recipes)
 
-@app.route('/recipe-added', methods=['POST'])
-def save_recipe():
+@app.route('/add-recipe', methods=['POST'])
+def add_recipe():
     name = request.form['name']
     time = request.form['time']
     ingredients = request.form['ingredients']
@@ -106,6 +110,36 @@ def save_recipe():
     # if user does not select file, browser also submit an empty part without filename
     if image.filename == '':
         database.add_instance(Recipe, name=name, ingredients=str(ingredients), instructions=instructions, time=str(time), image=None)
+    elif not allowed_file(image.filename):
+        flash(f'Nur folgende Dateiformate für Bilder erlaubt: {ALLOWED_EXTENSIONS}.', 'negative')
+        return render_template('full-calendar.html', recipes=database.query_all(Recipe))
+    else:
+        database.add_instance(Recipe, name=name, ingredients=str(ingredients), instructions=instructions, time=str(time), image=image.read())
+        
+    flash(f'Rezept {name} gespeichert.', 'positive')
+    return render_template('full-calendar.html', recipes=database.query_all(Recipe))
+
+@app.route('/import-recipe', methods=['POST'])
+def import_recipe():
+    link = request.form['link']
+    image = request.files['image']
+
+    scraper = scrape_me(link)
+
+    name = f'{scraper.title()} - {scraper.yields()}'
+    time = scraper.total_time()
+    ingredients = ';'.join(scraper.ingredients())
+    instructions = scraper.instructions()
+
+    same_recipe = Recipe.query.filter_by(name=name).first()
+    if same_recipe:
+        flash(f'Das Rezept {name} existiert bereits.', 'negative')
+        return render_template('full-calendar.html', recipes=database.query_all(Recipe))
+
+    # if user does not select file, browser also submit an empty part without filename
+    if image.filename == '':
+        image_stream = BytesIO(urlopen(scraper.image()).read())
+        database.add_instance(Recipe, name=name, ingredients=str(ingredients), instructions=instructions, time=str(time), image=image_stream.read())
     elif not allowed_file(image.filename):
         flash(f'Nur folgende Dateiformate für Bilder erlaubt: {ALLOWED_EXTENSIONS}.', 'negative')
         return render_template('full-calendar.html', recipes=database.query_all(Recipe))
@@ -150,7 +184,7 @@ def edit_recipe():
     flash(f'Rezept {name} gespeichert.', 'positive')
     return render_template('full-calendar.html', recipes=database.query_all(Recipe))
     
-@app.route("/remove-recipe", methods=['POST'])
+@app.route("/delete-recipe", methods=['POST'])
 def delete_recipe():
     recipe_id = request.form["id"]
 
@@ -203,11 +237,21 @@ def display_ingredients():
     """
     Diplays a list of ingredients for recipes of all events for the current week
     """
-    events = Event.query.filter(Event.date >= helper_functs.get_start_of_week())
+    start = request.args.get('start')
+    end = request.args.get('end')
+
+    if start == 'undefined' or end == 'undefined':
+        start_date = helper_functs.get_today_string()
+        end_date = helper_functs.get_week_from_string()
+        events = Event.query.filter(Event.date >= helper_functs.get_start_of_week())
+    else:
+        start_date = "{date:%d.%m}".format(date=datetime.strptime(start, '%Y-%m-%d').date())
+        end_date = "{date:%d.%m}".format(date=datetime.strptime(end, '%Y-%m-%d').date())
+        events = Event.query.filter(Event.date.between(start, end))
 
     ingredient_lists = []
     for event in events:
         recipe = Recipe.query.filter_by(id=event.fk_recipe).first()
         ingredient_lists.append(recipe.get_ingredients_list())
     
-    return render_template('ingredients.html', ingredients_dict=helper_functs.make_shopping_list(ingredient_lists), start=helper_functs.get_today_string(), end=helper_functs.get_week_from_string())
+    return render_template('ingredients.html', ingredients_dict=helper_functs.make_shopping_list(ingredient_lists), start=start_date, end=end_date)

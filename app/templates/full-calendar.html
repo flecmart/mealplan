@@ -47,6 +47,20 @@
 
 <body>
 
+	<script>
+		// dynamic url for ingredients
+		var selected_start;
+		var selected_end;
+
+		function generate_ingredients_url() {
+			return "/ingredients?start=" + selected_start + "&end=" + selected_end;
+		}
+
+		function redirect_ingredients() {
+			window.location= generate_ingredients_url();
+		}
+	</script>
+
 	<div class="container-fluid">
 		<div class="row">
 			<div id='calendar' class="col-md-10"></div>
@@ -57,33 +71,41 @@
 				</em>
 
 				<div style="text-align: center;" class="dropdown">
-					<button type="button" class="button5 dropdown-toggle" data-toggle="dropdown">Rezepte
+					<button id="recipe-control" type="button" class="button5 dropdown-toggle" data-toggle="dropdown">Rezepte
 						<span class="caret"></span></button>
 					<ul class="dropdown-menu" style="text-align: center;">
 						<li><a class="dropdown-item" data-toggle="modal" data-target="#createRecipeModal" href="#">Neues
 								Rezept</a></li>
 						<div class="divider"></div>
-						<li><a class="dropdown-item" href="/recipe-index">Kochbuch</a></li>
+						<li><a class="dropdown-item" data-toggle="modal" data-target="#importRecipeModal" href="#">
+							Rezept importieren</a></li>
 						<div class="divider"></div>
-						<li><a class="dropdown-item" href="/ingredients">Zutatenliste</a></li>
+						<li><a class="dropdown-item" href="/recipe-index">Alle Rezepte</a></li>
+						<div class="divider"></div>
+						<li><a class="dropdown-item" href="#" onclick=redirect_ingredients();return false;>Einkaufsliste</a></li>
 					</ul>
 				</div>
 
-				<!-- <div class="popup-help help-button-wrapper about-button" id="about" onclick="myFunction()">
-					<div id="about-text">Help</div>
-					<span class="help-popup help-text" id="myPopup">1. Search for recipes or create your own.</br>2. Click on calendar to add meals.</br>3. Click on calendar meals for recipe.</span>
-				</div> -->
+				<div class="popup-help help-button-wrapper about-button" id="about" onclick="myFunction()">
+					<div id="about-text">Hilfe</div>
+					<span class="help-popup help-text" id="myPopup">
+						     1. Rezept importieren oder eigenes Rezept anlegen.
+						</br>2. In den Kalender klicken um Essen zu planen.
+						</br>3. Auf geplantes Essen klicken um Rezept anzuzeigen.
+						</br>4. Bereich markieren und Einkaufsliste erzeugen.
+					</span>
+				</div>
 			</div>
 		</div>
 	</div>
 
-	<!-- <script>
+	<script>
 	// When the user clicks on div, open the popup
 		function myFunction() {
 			var popup = document.getElementById("myPopup");
 			popup.classList.toggle("show");
 		}
-	</script> -->
+	</script>
 
 	<!-- start recipe instructions modal -->
 	<div class="modal fade" id="getCodeModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
@@ -124,11 +146,9 @@
 					right: 'month,basicWeek'
 				},
 				eventClick: function (event, jsEvent, view) {
-					console.log(event)
 					recipe_name = event.title;
 					recipe_date = event.start;
 					recipe_id = event.id;
-					// alert(recipe_id)
 					recipe_date = recipe_date.format();
 					recipe_name = { "recipe_name": recipe_name }
 					recipe_date = { "recipe_date": recipe_date }
@@ -140,7 +160,13 @@
 					id = jsEvent.id
 					addMeal(date, id)
 				},
-
+				select: function( start, end, jsEvent, view) {
+					selected_start = start.format()
+					selected_end = end.format()
+				},
+				selectable: true,
+				unselectAuto: true,
+				unselectCancel: '#recipe-control',
 				editable: true,
 				eventLimit: true,
 				eventStartEditable: false,
@@ -157,8 +183,8 @@
 		});
 
 		function getRecipeId(recipe_date) {
-			console.log(recipe_id)
-			console.log(recipe_date)
+			//console.log(recipe_id)
+			//console.log(recipe_date)
 			$.ajax({
 				url: '/modal-recipe',
 				data: recipe_date,
@@ -168,7 +194,6 @@
 					//console.log(response);
 					jQuery("#getCodeModal").modal("toggle");
 					jQuery("#getCode").html(response);
-					//console.log(response, "ok get the data!!!!!");
 				},
 				error: function (error) {
 					console.log(error);
@@ -252,7 +277,7 @@
 				<!-- Modal Body -->
 				<div class="modal-body">
 
-					<form class="form-horizontal" action="{{ url_for('save_recipe') }}" method="post" role="form"
+					<form class="form-horizontal" action="{{ url_for('add_recipe') }}" method="post" role="form"
 						enctype=multipart/form-data>
 						<div class="form-group">
 							<label class="col-sm-2 control-label" for="inputName">Name</label>
@@ -282,7 +307,7 @@
 							</div>
 						</div>
 						<div class="form-group">
-							<label class="col-sm-2 control-label" for="inputInstructions">Bild</label>
+							<label class="col-sm-2 control-label" for="inputImage">Bild</label>
 							<div class="col-sm-10">
 								<input type='file' class='file-input' name='image' id='image'>
 							</div>
@@ -298,6 +323,57 @@
 			</div>
 		</div>
 	</div>
+
+	<!-- end CREATE RECIPE modal -->
+
+	<!-- start IMPORT RECIPE modal -->
+
+	<!-- Modal -->
+	<div class="modal fade" id="importRecipeModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+		aria-hidden="true">
+		<div class="modal-dialog">
+			<div style="background-color:rgba(10, 10, 10, 0.9);" class="modal-content">
+
+				<!-- Modal Header -->
+				<div style="border-bottom: none;" class="modal-header">
+					<button type="button" class="close" data-dismiss="modal">
+						<span style="text-shadow: none; color: white;">&times;</span>
+					</button>
+					<h4 style="color: #fff; text-align: center;" class="modal-title" id="myModalLabel">
+						Rezept anlegen
+					</h4>
+				</div>
+
+				<!-- Modal Body -->
+				<div class="modal-body">
+
+					<form class="form-horizontal" action="{{ url_for('import_recipe') }}" method="post" role="form"
+						enctype=multipart/form-data>
+						<div class="form-group">
+							<label class="col-sm-2 control-label" for="inputLink">Name</label>
+							<div class="col-sm-10">
+								<input name="link" type="text" class="form-control" id="inputLink" placeholder="https://www.chefkoch.de/rezepte/837041188488040/Avocado-Feta-Nudeln.html?portionen=4" />
+							</div>
+						</div>
+						<div class="form-group">
+							<label class="col-sm-2 control-label" for="inputImage">Bild</label>
+							<div class="col-sm-10">
+								<input type='file' class='file-input' name='image' id='image'>
+							</div>
+						</div>
+						<div class="form-group">
+							<div class="col-sm-offset-2 col-sm-10">
+								<button type="submit" class="btn btn-default">Importieren</button>
+							</div>
+						</div>
+					</form>
+				</div>
+
+			</div>
+		</div>
+	</div>
+
+	<!-- end IMPORT RECIPE modal -->
 
 </body>
 

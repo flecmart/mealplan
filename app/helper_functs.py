@@ -5,20 +5,21 @@ import re
 
 from fractions import Fraction
 
-list_of_measures = ['Esslöffel', 'Teelöffel', 'liter', 'l' 'can', 'cup', 'cups', 'pint', 'quart', 'tablespoons', 'tablespoon', 'tbs', 'tb', 't', 'ts', 'teaspoon', 'tsps', 'gr',
-                    'grams', 'gram', 'g' ,'kilo', 'kilogram', 'kg', 'dash', 'pinch', 'sprig', 'oz', 'ounce', 'ounces', 'cloves',
-                    'lb', 'pound', 'pd']
+list_of_measures = ['Pck', 'Packung', 'TL', 'EL', 'Esslöffel', 'Teelöffel', 'liter', 'l' 'can', 'cup', 'cups', 'pint', 'quart', 'tablespoons', 'tablespoon', 'tbs', 'tb', 't', 'ts', 
+                    'teaspoon', 'tsps', 'gr', 'grams', 'gram', 'g' ,'kilo', 'kilogram', 'kg', 'dash', 'pinch', 'sprig', 'oz', 'ounce', 'ounces', 'cloves', 'lb', 'pound', 'pd']
 
 words_not_recognized_as_nouns = ['flour', 'olive', 'oz']
 
+list_of_pos = ['NN', 'NNP', 'NNS', 'NNPS']
+
 def get_today_string():
-    today_string = "{date:%m/%d}".format(date=datetime.datetime.now())
+    today_string = "{date:%d.%m}".format(date=datetime.datetime.now())
     return today_string
 
 def get_week_from_string():
     today = datetime.datetime.today()
     week_from_date = today + datetime.timedelta(days=7)
-    week_from = "{date:%m/%d}".format(date=week_from_date)
+    week_from = "{date:%d.%m}".format(date=week_from_date)
     return week_from
 
 def get_start_of_week():
@@ -26,20 +27,23 @@ def get_start_of_week():
     start = today - datetime.timedelta(days=today.weekday())
     return "{date:%Y-%m-%d}".format(date=start)
 
+def strip_german_plural(string_in):
+    return string_in.replace('(s)', '').replace('(n)', '')
+
 def get_nouns(ingredients_string): 
     ''' strips adjectives and amounts from ingredient return LIST'''
-    ingredients = nltk.sent_tokenize(ingredients_string)
+    ingredients = nltk.sent_tokenize(strip_german_plural(ingredients_string))
     nouns = []
     for ingredient in ingredients:
         for word,pos in nltk.pos_tag(nltk.word_tokenize(str(ingredient))):
-            if word == 'flour' or word == 'oz' or word == 'olive':
+            if word in words_not_recognized_as_nouns:
                 nouns.append(word)
-            elif (pos == 'NN' or pos == 'NNP' or pos == 'NNS' or pos == 'NNPS'):
+            elif (pos in list_of_pos):
                 nouns.append(word)
         
     return nouns
 
-def obtain_measure(ingredient_string):
+def get_amount(ingredient_string):
     ''' given an ingredient as a string extract the amount converts to float'''
     split_list_of_ingredient = ingredient_string.split()
     for word in split_list_of_ingredient:
@@ -119,21 +123,19 @@ def convert_amt_to_oz(measure, amt):
     elif measure == 'gram':
         oz = amt * 0.035273
 
-
 def convert_amt_to_metric(measure, amt):
     ''' converts american measures to metric grams '''
     return convert_amt_to_oz(measure, amt) * 28.3495
-
 
 def make_ingredient_dict(list_of_ingredients):
     ''' takes a list of ingredients and returns a dictionary of key=ingredient, value= number of ounces '''
     ingredient_dict = {}
     for ingredient in list_of_ingredients:
-        amt = obtain_measure(ingredient)
+        amt = get_amount(ingredient)
         measurement = get_measure(ingredient)
         k_list = remove_amts_measures(ingredient)
         k_name = ' '.join(k_list)
-        key_name= k_name.title() # thus parmesan == Parmesan == PARMESAN
+        key_name = k_name.title() # thus parmesan == Parmesan == PARMESAN
         # in the case of say water or salt and pepper
         if amt == None:# and measurement == "whole":
             amt = 1
