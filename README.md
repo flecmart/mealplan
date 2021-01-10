@@ -10,8 +10,8 @@ In our household we need an overview of our recipes and a calendar that we can p
 
 Dependencies:
   
-- docker
-- docker-compose 
+- [docker & docker-compose](https://www.docker.com/get-started)  
+- [GNU make](https://chocolatey.org/packages/make) (for debugging on a windows machine)
 
 Clone the repository:
 
@@ -31,6 +31,15 @@ The app is now reachable at `localhost:5000`
 ## Development
 
 https://trello.com/b/k5LUVCYC/mealplan
+
+## Debug
+
+To debug the app inside the container I used the great debug approach of [Adrien Cacciaguerra](https://blog.theodo.com/2020/05/debug-flask-vscode/). 
+
+To debug the app:
+
+1. run `make flaskdebug`
+2. Press F5 to attach vscode
 
 ## Recreate DB
 

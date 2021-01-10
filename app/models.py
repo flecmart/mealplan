@@ -5,18 +5,20 @@ db = flask_sqlalchemy.SQLAlchemy()
 
 class Recipe(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
+    name = db.Column(db.String(128), nullable=False)
     ingredients = db.Column(db.Text, nullable=False) # comma separated
     instructions = db.Column(db.Text, nullable=False) # free text
     time = db.Column(db.Integer, nullable=True) # time in minutes
-    image = db.Column(db.LargeBinary, nullable=True) # optional image
+    icon = db.Column(db.String(64), nullable=False) # icon for calendar
+    image = db.Column(db.LargeBinary, nullable=True) # optional recipe image
     __table_args__ = (db.UniqueConstraint('name', name='_uc_recipe_name'),)
     
-    def __init__(self, name, ingredients, instructions, time, image):
+    def __init__(self, name, ingredients, instructions, time, icon, image):
         self.name = name
         self.ingredients = ingredients
         self.instructions = instructions
         self.time = time
+        self.icon = icon
         self.image = image
 
     def get_ingredients_list(self):

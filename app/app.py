@@ -91,6 +91,7 @@ def add_recipe():
     time = request.form['time']
     ingredients = request.form['ingredients']
     instructions = request.form['instructions']
+    icon = request.form['icon']
     image = request.files['image']
 
     if time == '': 
@@ -107,14 +108,17 @@ def add_recipe():
         flash(f'Das Rezept {name} existiert bereits.', 'negative')
         return render_template('full-calendar.html', recipes=database.query_all(Recipe))
 
+    if icon == '':
+        icon = 'defaultIcon.png'
+
     # if user does not select file, browser also submit an empty part without filename
     if image.filename == '':
-        database.add_instance(Recipe, name=name, ingredients=str(ingredients), instructions=instructions, time=str(time), image=None)
+        database.add_instance(Recipe, name=name, ingredients=str(ingredients), instructions=instructions, time=str(time), icon=icon, image=None)
     elif not allowed_file(image.filename):
         flash(f'Nur folgende Dateiformate für Bilder erlaubt: {ALLOWED_EXTENSIONS}.', 'negative')
         return render_template('full-calendar.html', recipes=database.query_all(Recipe))
     else:
-        database.add_instance(Recipe, name=name, ingredients=str(ingredients), instructions=instructions, time=str(time), image=image.read())
+        database.add_instance(Recipe, name=name, ingredients=str(ingredients), instructions=instructions, time=str(time), icon=icon, image=image.read())
         
     flash(f'Rezept {name} gespeichert.', 'positive')
     return render_template('full-calendar.html', recipes=database.query_all(Recipe))
@@ -122,6 +126,7 @@ def add_recipe():
 @app.route('/import-recipe', methods=['POST'])
 def import_recipe():
     link = request.form['link']
+    icon = request.form['icon']
     image = request.files['image']
 
     scraper = scrape_me(link)
@@ -136,15 +141,18 @@ def import_recipe():
         flash(f'Das Rezept {name} existiert bereits.', 'negative')
         return render_template('full-calendar.html', recipes=database.query_all(Recipe))
 
+    if icon == '':
+        icon = 'defaultIcon.png'
+
     # if user does not select file, browser also submit an empty part without filename
     if image.filename == '':
         image_stream = BytesIO(urlopen(scraper.image()).read())
-        database.add_instance(Recipe, name=name, ingredients=str(ingredients), instructions=instructions, time=str(time), image=image_stream.read())
+        database.add_instance(Recipe, name=name, ingredients=str(ingredients), instructions=instructions, time=str(time), icon=icon, image=image_stream.read())
     elif not allowed_file(image.filename):
         flash(f'Nur folgende Dateiformate für Bilder erlaubt: {ALLOWED_EXTENSIONS}.', 'negative')
         return render_template('full-calendar.html', recipes=database.query_all(Recipe))
     else:
-        database.add_instance(Recipe, name=name, ingredients=str(ingredients), instructions=instructions, time=str(time), image=image.read())
+        database.add_instance(Recipe, name=name, ingredients=str(ingredients), instructions=instructions, time=str(time), icon=icon, image=image.read())
         
     flash(f'Rezept {name} gespeichert.', 'positive')
     return render_template('full-calendar.html', recipes=database.query_all(Recipe))
@@ -156,6 +164,7 @@ def edit_recipe():
     time = request.form['time']
     ingredients = request.form['ingredients']
     instructions = request.form['instructions']
+    icon = request.form['icon']
     image = request.files['image']
 
     if time == '': 
@@ -172,14 +181,17 @@ def edit_recipe():
         flash(f'Das Rezept {name} existiert bereits.', 'negative')
         return render_template('full-calendar.html', recipes=database.query_all(Recipe))
 
+    if icon == '':
+        icon = same_recipe.icon # use premapped icon
+
     # if user does not select file, browser also submit an empty part without filename
     if image.filename == '':
-        database.update_instance(Recipe, recipe_id, name=name, ingredients=str(ingredients), instructions=instructions, time=str(time))
+        database.update_instance(Recipe, recipe_id, name=name, ingredients=str(ingredients), instructions=instructions, time=str(time), icon=icon)
     elif not allowed_file(image.filename):
         flash(f'Nur folgende Dateiformate für Bilder erlaubt: {ALLOWED_EXTENSIONS}.', 'negative')
         return render_template('full-calendar.html', recipes=database.query_all(Recipe))
     else:
-        database.update_instance(Recipe, recipe_id, name=name, ingredients=str(ingredients), instructions=instructions, time=str(time), image=image.read())
+        database.update_instance(Recipe, recipe_id, name=name, ingredients=str(ingredients), instructions=instructions, time=str(time), icon=icon, image=image.read())
         
     flash(f'Rezept {name} gespeichert.', 'positive')
     return render_template('full-calendar.html', recipes=database.query_all(Recipe))

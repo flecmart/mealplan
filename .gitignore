@@ -129,4 +129,4 @@ dmypy.json
 .pyre/
 
 # private config
-database.conf
+environment.conf
