@@ -137,7 +137,7 @@
 			$('#calendar').fullCalendar({
 				eventRender: function (event, eventElement) {
 					if (event.imageurl) {
-						eventElement.find('div.fc-content').append('<br><br><img src="' + event.imageurl + '" width="100" height="100" >');
+						eventElement.find('div.fc-content').append('<br><br><img src="' + event.imageurl + '" width="50" height="50" >');
 					}
 				},
 				header: {
@@ -182,6 +182,7 @@
 			});
 		});
 
+		
 		function getRecipeId(recipe_date) {
 			//console.log(recipe_id)
 			//console.log(recipe_date)
@@ -192,8 +193,9 @@
 				type: 'POST',
 				success: function (response) {
 					//console.log(response);
-					jQuery("#getCodeModal").modal("toggle");
-					jQuery("#getCode").html(response);
+					//TODO: fix sync request
+					$("#getCode").html(response);
+					$("#getCodeModal").modal('show');
 				},
 				error: function (error) {
 					console.log(error);

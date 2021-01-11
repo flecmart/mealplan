@@ -59,10 +59,7 @@ def return_data():
     all_events = []
     for event in events:
         recipe = Recipe.query.filter_by(id=event.fk_recipe).first()
-        if recipe.image:
-            all_events.append({"title":recipe.name, "start":event.date, "id":recipe.id, "imageurl":f"/recipe/{recipe.id}/img"})
-        else:
-            all_events.append({"title":recipe.name, "start":event.date, "id":recipe.id, "imageurl":"/static/images/default.png"})
+        all_events.append({"title":recipe.name, "start":event.date, "id":recipe.id, "imageurl":f"/static/images/{recipe.icon}"})
     
     return json.dumps(all_events, default=str)
 
@@ -81,8 +78,12 @@ def cal_display():
         date = request.form['date']
         recipe_id = request.form['name']
 
-        database.add_instance(Event, fk_recipe=recipe_id, date=date)
+        events = Event.query.filter_by(date=date).all()
+        for event in events:
+            if int(recipe_id) == event.fk_recipe:
+                 return render_template('full-calendar.html', recipes=recipes)
 
+        database.add_instance(Event, fk_recipe=recipe_id, date=date)
         return render_template('full-calendar.html', recipes=recipes)
 
 @app.route('/add-recipe', methods=['POST'])
