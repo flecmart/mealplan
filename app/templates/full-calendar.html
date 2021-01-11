@@ -42,25 +42,14 @@
 			font-size: 4rem;
 			/* text-shadow: 2px 2px 3px rgb(236, 236, 225); */
 		}
+
+		.visible {
+			display: block;
+		}
 	</style>
 </head>
 
 <body>
-
-	<script>
-		// dynamic url for ingredients
-		var selected_start;
-		var selected_end;
-
-		function generate_ingredients_url() {
-			return "/ingredients?start=" + selected_start + "&end=" + selected_end;
-		}
-
-		function redirect_ingredients() {
-			window.location= generate_ingredients_url();
-		}
-	</script>
-
 	<div class="container-fluid">
 		<div class="row">
 			<div id='calendar' class="col-md-10"></div>
@@ -71,25 +60,27 @@
 				</em>
 
 				<div style="text-align: center;" class="dropdown">
-					<button id="recipe-control" type="button" class="button5 dropdown-toggle" data-toggle="dropdown">Rezepte
+					<button id="recipe-control" type="button" class="button5 dropdown-toggle"
+						data-toggle="dropdown">Rezepte
 						<span class="caret"></span></button>
 					<ul class="dropdown-menu" style="text-align: center;">
 						<li><a class="dropdown-item" data-toggle="modal" data-target="#createRecipeModal" href="#">Neues
 								Rezept</a></li>
 						<div class="divider"></div>
 						<li><a class="dropdown-item" data-toggle="modal" data-target="#importRecipeModal" href="#">
-							Rezept importieren</a></li>
+								Rezept importieren</a></li>
 						<div class="divider"></div>
 						<li><a class="dropdown-item" href="/recipe-index">Alle Rezepte</a></li>
 						<div class="divider"></div>
-						<li><a class="dropdown-item" href="#" onclick=redirect_ingredients();return false;>Einkaufsliste</a></li>
+						<li><a class="dropdown-item" href="#" onclick=redirect_ingredients();return
+								false;>Einkaufsliste</a></li>
 					</ul>
 				</div>
 
 				<div class="popup-help help-button-wrapper about-button" id="about" onclick="myFunction()">
 					<div id="about-text">Hilfe</div>
 					<span class="help-popup help-text" id="myPopup">
-						     1. Rezept importieren oder eigenes Rezept anlegen.
+						1. Rezept importieren oder eigenes Rezept anlegen.
 						</br>2. In den Kalender klicken um Essen zu planen.
 						</br>3. Auf geplantes Essen klicken um Rezept anzuzeigen.
 						</br>4. Bereich markieren und Einkaufsliste erzeugen.
@@ -99,14 +90,6 @@
 		</div>
 	</div>
 
-	<script>
-	// When the user clicks on div, open the popup
-		function myFunction() {
-			var popup = document.getElementById("myPopup");
-			popup.classList.toggle("show");
-		}
-	</script>
-
 	<!-- start recipe instructions modal -->
 	<div class="modal fade" id="getCodeModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
 		aria-hidden="true">
@@ -114,101 +97,8 @@
 			//ajax success content here.
 		</div>
 	</div>
-
-	<script>
-		$(document).click(function (event) {
-			//if you click on anything except the modal itself or the "open modal" link, close the modal
-			if (!$(event.target).closest(".modal,.js-open-modal").length) {
-				$("body").find(".modal").removeClass("visible");
-			}
-		});
-	</script>
-
-	<style>
-		.visible {
-			display: block;
-		}
-	</style>
-
 	<!-- end recipe instructions modal -->
 
-	<script>
-		$(document).ready(function () {
-			$('#calendar').fullCalendar({
-				eventRender: function (event, eventElement) {
-					if (event.imageurl) {
-						eventElement.find('div.fc-content').append('<br><br><img src="' + event.imageurl + '" width="50" height="50" >');
-					}
-				},
-				header: {
-					left: 'today,prev,next',
-					center: 'title',
-					right: 'month,basicWeek'
-				},
-				eventClick: function (event, jsEvent, view) {
-					recipe_name = event.title;
-					recipe_date = event.start;
-					recipe_id = event.id;
-					recipe_date = recipe_date.format();
-					recipe_name = { "recipe_name": recipe_name }
-					recipe_date = { "recipe_date": recipe_date }
-					recipe_id = { "recipe_id": recipe_id }
-					getRecipeId(recipe_date);
-				},
-				dayClick: function (date, jsEvent, view) {
-					date = date.format()
-					id = jsEvent.id
-					addMeal(date, id)
-				},
-				select: function( start, end, jsEvent, view) {
-					selected_start = start.format()
-					selected_end = end.format()
-				},
-				selectable: true,
-				unselectAuto: true,
-				unselectCancel: '#recipe-control',
-				editable: true,
-				eventLimit: true,
-				eventStartEditable: false,
-				events: {
-					url: 'data',
-					error: function () {
-						$('#script-warning').show();
-					}
-				},
-				loading: function (bool) {
-					$('#loading').toggle(bool);
-				},
-			});
-		});
-
-		
-		function getRecipeId(recipe_date) {
-			//console.log(recipe_id)
-			//console.log(recipe_date)
-			$.ajax({
-				url: '/modal-recipe',
-				data: recipe_date,
-				// contentType: application/json,
-				type: 'POST',
-				success: function (response) {
-					//console.log(response);
-					//TODO: fix sync request
-					$("#getCode").html(response);
-					$("#getCodeModal").modal('show');
-				},
-				error: function (error) {
-					console.log(error);
-				}
-			});
-		}
-
-		function addMeal(date) {
-			jQuery("#addMeal").modal("toggle");
-			jQuery("#addMealDate").val(date);
-		}
-
-	</script>
 
 	<!-- start ADD MEAL modal-->
 	<div id="addMeal" class="modal fade">
@@ -311,7 +201,7 @@
 						<div class="form-group">
 							<label class="col-sm-2 control-label" for="inputIcon">Icon</label>
 							<div class="col-sm-10">
-								<select title="Select icon" class="selectpicker" name="icon">
+								<select title="Select" class="selectpicker" name="icon" data-width="90px">
 									<option data-content="<img src='/static/images/pasta.png'>">pasta.png</option>
 									<option data-content="<img src='/static/images/potato.png'>">potato.png</option>
 									<option data-content="<img src='/static/images/rice.png'>">rice.png</option>
@@ -319,7 +209,7 @@
 									<option data-content="<img src='/static/images/meat.png'>">meat.png</option>
 									<option data-content="<img src='/static/images/vegs.png'>">vegs.png</option>
 									<option data-content="<img src='/static/images/sweet.png'>">sweet.png</option>
-								  </select>
+								</select>
 							</div>
 						</div>
 						<div class="form-group">
@@ -368,13 +258,14 @@
 						<div class="form-group">
 							<label class="col-sm-2 control-label" for="inputLink">Name</label>
 							<div class="col-sm-10">
-								<input name="link" type="text" class="form-control" id="inputLink" placeholder="https://www.chefkoch.de/rezepte/837041188488040/Avocado-Feta-Nudeln.html?portionen=4" />
+								<input name="link" type="text" class="form-control" id="inputLink"
+									placeholder="https://www.chefkoch.de/rezepte/837041188488040/Avocado-Feta-Nudeln.html?portionen=4" />
 							</div>
 						</div>
 						<div class="form-group">
 							<label class="col-sm-2 control-label" for="inputIcon">Icon</label>
 							<div class="col-sm-10">
-								<select title="Select icon" class="selectpicker" name="icon">
+								<select title="Select" class="selectpicker" name="icon" data-width="90px">
 									<option data-content="<img src='/static/images/pasta.png'>">pasta.png</option>
 									<option data-content="<img src='/static/images/potato.png'>">potato.png</option>
 									<option data-content="<img src='/static/images/rice.png'>">rice.png</option>
@@ -382,7 +273,7 @@
 									<option data-content="<img src='/static/images/meat.png'>">meat.png</option>
 									<option data-content="<img src='/static/images/vegs.png'>">vegs.png</option>
 									<option data-content="<img src='/static/images/sweet.png'>">sweet.png</option>
-								  </select>
+								</select>
 							</div>
 						</div>
 						<div class="form-group">
@@ -404,6 +295,109 @@
 	</div>
 
 	<!-- end IMPORT RECIPE modal -->
+
+	<script>
+		// dynamic url for ingredients
+		var selected_start;
+		var selected_end;
+
+		function generate_ingredients_url() {
+			return "/ingredients?start=" + selected_start + "&end=" + selected_end;
+		}
+
+		function redirect_ingredients() {
+			window.location = generate_ingredients_url();
+		}
+
+		// When the user clicks on div, open the popup
+		function myFunction() {
+			var popup = document.getElementById("myPopup");
+			popup.classList.toggle("show");
+		}
+
+		$(document).click(function (event) {
+			//if you click on anything except the modal itself or the "open modal" link, close the modal
+			if (!$(event.target).closest(".modal,.js-open-modal").length) {
+				$("body").find(".modal").removeClass("visible");
+			}
+		});
+
+		$(document).ready(function () {
+			$('#calendar').fullCalendar({
+				eventRender: function (event, eventElement) {
+					if (event.imageurl) {
+						eventElement.find('div.fc-content').append('<br><br><img src="' + event.imageurl + '" width="50" height="50" >');
+					}
+				},
+				header: {
+					left: 'today,prev,next',
+					center: 'title',
+					right: 'month,basicWeek'
+				},
+				eventClick: function (event, jsEvent, view) {
+					recipe_name = event.title;
+					recipe_date = event.start;
+					recipe_id = event.id;
+					recipe_date = recipe_date.format();
+					recipe_name = { "recipe_name": recipe_name }
+					recipe_date = { "recipe_date": recipe_date }
+					recipe_id = { "recipe_id": recipe_id }
+					getRecipeId(recipe_date);
+				},
+				dayClick: function (date, jsEvent, view) {
+					date = date.format()
+					id = jsEvent.id
+					addMeal(date, id)
+				},
+				select: function (start, end, jsEvent, view) {
+					selected_start = start.format()
+					selected_end = end.format()
+				},
+				selectable: true,
+				unselectAuto: true,
+				unselectCancel: '#recipe-control',
+				editable: true,
+				eventLimit: true,
+				eventStartEditable: false,
+				events: {
+					url: 'data',
+					error: function () {
+						$('#script-warning').show();
+					}
+				},
+				loading: function (bool) {
+					$('#loading').toggle(bool);
+				},
+			});
+		});
+
+
+		function getRecipeId(recipe_date) {
+			//console.log(recipe_id)
+			//console.log(recipe_date)
+			$.ajax({
+				url: '/modal-recipe',
+				data: recipe_date,
+				// contentType: application/json,
+				type: 'POST',
+				success: function (response) {
+					//console.log(response);
+					//TODO: fix sync request
+					$("#getCode").html(response);
+					$("#getCodeModal").modal('show');
+				},
+				error: function (error) {
+					console.log(error);
+				}
+			});
+		}
+
+		function addMeal(date) {
+			$("#addMeal").modal("toggle");
+			$("#addMealDate").val(date);
+		}
+
+	</script>
 
 </body>
 
