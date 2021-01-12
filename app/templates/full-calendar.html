@@ -91,10 +91,10 @@
 	</div>
 
 	<!-- start recipe instructions modal -->
-	<div class="modal fade" id="getCodeModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+	<div class="modal fade" id="recipeModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
 		aria-hidden="true">
-		<div class="modal-body" id="getCode">
-			//ajax success content here.
+		<div class="modal-body" id="content">
+			//ajax success content
 		</div>
 	</div>
 	<!-- end recipe instructions modal -->
@@ -335,14 +335,20 @@
 					right: 'month,basicWeek'
 				},
 				eventClick: function (event, jsEvent, view) {
-					recipe_name = event.title;
-					recipe_date = event.start;
-					recipe_id = event.id;
-					recipe_date = recipe_date.format();
-					recipe_name = { "recipe_name": recipe_name }
-					recipe_date = { "recipe_date": recipe_date }
-					recipe_id = { "recipe_id": recipe_id }
-					getRecipeId(recipe_date);
+					//TODO: pass also recipe name for add and removing different events
+
+					$.ajax({
+						url: 'modal-recipe',
+						data: recipe_date = { "recipe_date": event.start.format() },
+						type: 'POST',
+						async: true
+					}).done(function (response) {
+						//console.log(response);
+						$("#content").html(response);
+						$("#recipeModal").modal("toggle");
+					}).fail(function (error) {
+						console.log(error);
+					});
 				},
 				dayClick: function (date, jsEvent, view) {
 					date = date.format()
@@ -371,31 +377,16 @@
 			});
 		});
 
-
-		function getRecipeId(recipe_date) {
-			//console.log(recipe_id)
-			//console.log(recipe_date)
-			$.ajax({
-				url: '/modal-recipe',
-				data: recipe_date,
-				// contentType: application/json,
-				type: 'POST',
-				success: function (response) {
-					//console.log(response);
-					//TODO: fix sync request
-					$("#getCode").html(response);
-					$("#getCodeModal").modal('show');
-				},
-				error: function (error) {
-					console.log(error);
-				}
-			});
-		}
-
 		function addMeal(date) {
-			$("#addMeal").modal("toggle");
 			$("#addMealDate").val(date);
+			$("#addMeal").modal("toggle");
 		}
+
+		//reload page after recipe modal after recipe modal
+		$('#recipeModal').on('hidden.bs.modal', function () {
+			console.log("reload...")
+			document.location.reload();
+		})
 
 	</script>
 
