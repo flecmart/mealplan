@@ -339,7 +339,7 @@
 
 					$.ajax({
 						url: 'modal-recipe',
-						data: recipe_date = { "recipe_date": event.start.format() },
+						data: recipe_data = { "recipe_date": event.start.format(), "recipe_name": event.title },
 						type: 'POST',
 						async: true
 					}).done(function (response) {

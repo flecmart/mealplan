@@ -8,6 +8,7 @@ from datetime import datetime
 from io import BytesIO
 from urllib.request import urlopen
 from flask import request, flash, render_template
+from sqlalchemy import and_
 from recipe_scrapers import scrape_me
 from todoist.api import TodoistAPI
 from . import create_app
@@ -81,6 +82,7 @@ def cal_display():
         events = Event.query.filter_by(date=date).all()
         for event in events:
             if int(recipe_id) == event.fk_recipe:
+                 flash("Dieses Rezept ist an diesem Tag bereits geplant.", 'negative')
                  return render_template('full-calendar.html', recipes=recipes)
 
         database.add_instance(Event, fk_recipe=recipe_id, date=date)
@@ -215,8 +217,8 @@ def delete_recipe():
 @app.route("/modal-recipe", methods=['POST'])
 def display_modal_recipe():
     recipe_date = request.form["recipe_date"]
-    event = Event.query.filter_by(date=recipe_date).first()
-    recipe = Recipe.query.filter_by(id=event.fk_recipe).first()
+    recipe_name = request.form["recipe_name"]
+    recipe = Recipe.query.filter_by(name=recipe_name).first()
 
     return render_template('recipe.html', recipe=recipe, instructions=recipe.get_instructions(), recipe_date=recipe_date, ingredients=recipe.get_ingredients_list())
 
@@ -238,9 +240,11 @@ def display_index():
   
 @app.route('/remove-meal', methods=['POST'])
 def delete_meal_event():
-    event_date = request.form['dinner_to_remove']
-    
-    Event.query.filter_by(date=event_date).delete()
+    event_date = request.form['date_to_remove']
+    event_name = request.form['dinner_to_remove']
+
+    recipe = Recipe.query.filter_by(name=event_name).first()
+    Event.query.filter(and_(Event.date == event_date, Event.fk_recipe == recipe.id)).delete()
     db.session.commit()
 
     return render_template('full-calendar.html', recipes=database.query_all(Recipe))

@@ -44,7 +44,8 @@
     <!-- remove meal from calendar -->
     {% if recipe_date %}
     <form style="text-align: center;" action="/remove-meal" method="post">
-        <input type="hidden" name="dinner_to_remove" value="{{ recipe_date }}">
+        <input type="hidden" name="date_to_remove" value="{{ recipe_date }}">
+        <input type="hidden" name="dinner_to_remove" value="{{ recipe.name }}">
         <input class="button5" style="color:black; margin-top: 2%;" type="submit" id="remove" value="Entfernen" />
     </form>
     {% endif %}
