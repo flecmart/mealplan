@@ -272,3 +272,10 @@ def display_ingredients():
         ingredient_lists.append(recipe.get_ingredients_list())
     
     return render_template('ingredients.html', ingredients_dict=helper_functs.make_shopping_list(ingredient_lists), start=start_date, end=end_date)
+
+@app.route("/export-todoist", methods = ['POST'])
+def export_todoist():
+    ingedients_to_export = request.form.getlist('export_ingredient')
+    # TODO export to todoist
+    flash(f'Zutaten nach Todoist Einkaufsliste exportiert: {ingedients_to_export}')
+    return render_template('full-calendar.html', recipes=database.query_all(Recipe))
