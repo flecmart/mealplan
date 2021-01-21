@@ -16,15 +16,15 @@ from . import database
 from . import helper_functs
 from .models import db, Recipe, Event
 
-def get_todoist_project_id(name):
+def get_todoist_project_id(api, name):
     for project in api.state['projects']:
         if project['name'] == name:
             return project['id']
     return None
 
-api = TodoistAPI(os.environ['TODOIST_TOKEN'])
-api.sync()
-shopping_list = get_todoist_project_id('Einkaufsliste')
+todoist_api = TodoistAPI(os.environ['TODOIST_TOKEN'])
+todoist_api.sync()
+shopping_list = get_todoist_project_id(todoist_api, 'Einkaufsliste')
 
 app = create_app()
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif'])
@@ -38,8 +38,6 @@ def index():
 
 @app.route('/test', methods=['GET'])
 def show_data():
-    #api.items.add('TestFromPython', project_id=shopping_list)
-    #api.commit()
     recipes = database.query_all(Recipe)
     recipe_json = []
     for recipe in recipes:
@@ -276,6 +274,8 @@ def display_ingredients():
 @app.route("/export-todoist", methods = ['POST'])
 def export_todoist():
     ingedients_to_export = request.form.getlist('export_ingredient')
-    # TODO export to todoist
+    for entry in ingedients_to_export:
+        todoist_api.items.add(entry, project_id=shopping_list)
+    todoist_api.commit()
     flash(f'Zutaten nach Todoist Einkaufsliste exportiert: {ingedients_to_export}')
     return render_template('full-calendar.html', recipes=database.query_all(Recipe))

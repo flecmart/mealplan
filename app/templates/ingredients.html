@@ -14,15 +14,15 @@
 
     </div>
     <form class="form-group" action="{{ url_for('export_todoist') }}" method="post" role="form">
-    <ul id="ingred-list" style="margin-top: 20px;">
+    <ul id="ingred-list" style="margin-top: 20px; list-style-type:none; margin: 0 auto; display: table;">
         <!-- sorted alphabetically for now -->
         {% for k, v in ingredients_dict.items()| sort %}
         {% if k and v != None %}
-        <li> {{ v[0] }} {{ v[1] }}  {{ k }} <input type="checkbox" name="export_ingredient" value="{{ v[0] }} {{ v[1] }}  {{ k }}"></li>
+        <li><input type="checkbox" name="export_ingredient" value="{{ v[0] }} {{ v[1] }}  {{ k }}"> {{ v[0] }} {{ v[1] }}  {{ k }}</li>
         {% endif %}
         {% endfor %}
-        <div>
-            <button type="submit" class="btn btn-default">Exportieren</button>
+        <div style="text-align:center; margin-top: 5px;">
+            <button type="submit" class="btn btn-default">Todoist</button>
         </div>
     </ul>
     </form>
