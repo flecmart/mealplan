@@ -51,17 +51,17 @@ Then restart the app.
 
 ## Backup and restore DB
 
-Backup:
+Backup: https://github.com/prodrigestivill/docker-postgres-backup-local
 
-`docker exec mealplan_db /usr/bin/pg_dumpall -U postgres > backup.sql`
+In case of running as postgres user, the system administrator must initialize the permission of the destination folder as follows:
 
-`docker exec mealplan_db /usr/bin/pg_dumpall -U postgres | gzip -9 > backup.sql.gz`
+`sudo mkdir -p /var/opt/pgbackups && sudo chown -R 999:999 /var/opt/pgbackups`
 
-``docker exec -t your-db-container pg_dumpall -c -U postgres > dump_`date +%d-%m-%Y"_"%H_%M_%S`.sql``
+Restore:
 
-Restore
+Replace the backupfile name, `$CONTAINER`, `$USERNAME` and `$DBNAME` from the following command:
 
-`cat your_dump.sql | docker exec mealplan_db psql -U postgres`
+`zcat backupfile.sql.gz | docker exec --tty --interactive $CONTAINER psql --username=$USERNAME --dbname=$DBNAME -W`
 
 ## Inspiration
 
