@@ -5,11 +5,10 @@
     background-repeat:  no-repeat;
     background-attachment: fixed;
     background-size:  cover;
-    background-color: #999;
 }
 
 #calendar {
-    background-color: beige;
+    background-color: white;
 }
 
 /* Begin Flash Messages */
