@@ -363,7 +363,7 @@
 				},
 				select: function (start, end, jsEvent, view) {
 					selected_start = start.format()
-					selected_end = end.format()
+					selected_end = end.add(-1, 'days').format()
 				},
 				selectable: true,
 				unselectAuto: true,
