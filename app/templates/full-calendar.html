@@ -341,8 +341,6 @@
 				eventBorderColor: '#303030', 
 				eventTextColor: '#303030',
 				eventClick: function (event, jsEvent, view) {
-					//TODO: pass also recipe name for add and removing different events
-
 					$.ajax({
 						url: 'modal-recipe',
 						data: recipe_data = { "recipe_date": event.start.format(), "recipe_name": event.title },
@@ -365,12 +363,26 @@
 					selected_start = start.format()
 					selected_end = end.add(-1, 'days').format()
 				},
+				eventDrop: function(event, delta, revertFunc) { 
+					//console.log(event);
+					//console.log(delta);
+					$.ajax({
+						url: '/move-meal',
+						type: 'POST',
+						data: event_data = { "event_date": event.start.format(), "event_name": event.title, "event_delta": delta._days },
+						success: function (response) {
+							console.log(response);
+						}});
+				},
 				selectable: true,
 				unselectAuto: true,
 				unselectCancel: '#recipe-control',
 				editable: true,
+				eventResizableFromStart: false,
+				eventDurationEditable: false,
+				eventResourceEditable: false,
 				eventLimit: true,
-				eventStartEditable: false,
+				eventStartEditable: true,
 				events: {
 					url: 'data',
 					error: function () {

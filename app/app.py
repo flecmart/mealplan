@@ -1,13 +1,14 @@
+from flask.helpers import url_for
 from .debugger import initialize_flask_server_debugger_if_needed
 initialize_flask_server_debugger_if_needed()
 
 import os
 import json
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from io import BytesIO
 from urllib.request import urlopen
-from flask import request, flash, render_template
+from flask import request, flash, render_template, jsonify, redirect
 from sqlalchemy import and_
 from recipe_scrapers import scrape_me
 from todoist.api import TodoistAPI
@@ -46,8 +47,7 @@ def show_data():
             "name": recipe.name,
             "ingredients": recipe.ingredients,
             "instructions": recipe.instructions,
-            "time": recipe.time,
-            "image": recipe.image
+            "time": recipe.time
         }
         recipe_json.append(new_recipe)
     return json.dumps(recipe_json), 200
@@ -58,7 +58,7 @@ def return_data():
     all_events = []
     for event in events:
         recipe = Recipe.query.filter_by(id=event.fk_recipe).first()
-        all_events.append({"title":recipe.name, "start":event.date, "id":recipe.id, "imageurl":f"/static/images/{recipe.icon}"})
+        all_events.append({"title":recipe.name, "start":event.date, "id":event.id, "imageurl":f"/static/images/{recipe.icon}"})
     
     return json.dumps(all_events, default=str)
 
@@ -100,14 +100,14 @@ def add_recipe():
  
     if len(name) == 0 or len(ingredients) == 0 or len(instructions) == 0:
         flash('Bitte mindestens Namen, Zutaten und Zubereitung ausfüllen.', 'negative')
-        return render_template('full-calendar.html', recipes=database.query_all(Recipe))
+        return redirect(url_for('cal_display'))
 
     ingredients = ';'.join(ingredients.splitlines())
 
     same_recipe = Recipe.query.filter_by(name=name).first()
     if same_recipe:
         flash(f'Das Rezept {name} existiert bereits.', 'negative')
-        return render_template('full-calendar.html', recipes=database.query_all(Recipe))
+        return redirect(url_for('cal_display'))
 
     if icon == '':
         icon = 'defaultIcon.png'
@@ -117,12 +117,12 @@ def add_recipe():
         database.add_instance(Recipe, name=name, ingredients=str(ingredients), instructions=instructions, time=str(time), icon=icon, image=None)
     elif not allowed_file(image.filename):
         flash(f'Nur folgende Dateiformate für Bilder erlaubt: {ALLOWED_EXTENSIONS}.', 'negative')
-        return render_template('full-calendar.html', recipes=database.query_all(Recipe))
+        return redirect(url_for('cal_display'))
     else:
         database.add_instance(Recipe, name=name, ingredients=str(ingredients), instructions=instructions, time=str(time), icon=icon, image=image.read())
         
     flash(f'Rezept {name} gespeichert.', 'positive')
-    return render_template('full-calendar.html', recipes=database.query_all(Recipe))
+    return redirect(url_for('display_index'))
 
 @app.route('/import-recipe', methods=['POST'])
 def import_recipe():
@@ -140,7 +140,7 @@ def import_recipe():
     same_recipe = Recipe.query.filter_by(name=name).first()
     if same_recipe:
         flash(f'Das Rezept {name} existiert bereits.', 'negative')
-        return render_template('full-calendar.html', recipes=database.query_all(Recipe))
+        return redirect(url_for('cal_display'))
 
     if icon == '':
         icon = 'defaultIcon.png'
@@ -151,12 +151,12 @@ def import_recipe():
         database.add_instance(Recipe, name=name, ingredients=str(ingredients), instructions=instructions, time=str(time), icon=icon, image=image_stream.read())
     elif not allowed_file(image.filename):
         flash(f'Nur folgende Dateiformate für Bilder erlaubt: {ALLOWED_EXTENSIONS}.', 'negative')
-        return render_template('full-calendar.html', recipes=database.query_all(Recipe))
+        return redirect(url_for('cal_display'))
     else:
         database.add_instance(Recipe, name=name, ingredients=str(ingredients), instructions=instructions, time=str(time), icon=icon, image=image.read())
         
     flash(f'Rezept {name} gespeichert.', 'positive')
-    return render_template('full-calendar.html', recipes=database.query_all(Recipe))
+    return redirect(url_for('display_index'))
 
 @app.route("/edit-recipe",  methods = ['POST'])
 def edit_recipe():
@@ -173,14 +173,14 @@ def edit_recipe():
  
     if len(name) == 0 or len(ingredients) == 0 or len(instructions) == 0:
         flash('Bitte mindestens Namen, Zutaten und Zubereitung ausfüllen.', 'negative')
-        return render_template('full-calendar.html', recipes=database.query_all(Recipe))
+        return redirect(url_for('display_index'))
 
     ingredients = ';'.join(ingredients.splitlines())
 
     same_recipe = Recipe.query.filter_by(name=name).first()
     if same_recipe and same_recipe.id != recipe_id:
         flash(f'Das Rezept {name} existiert bereits.', 'negative')
-        return render_template('full-calendar.html', recipes=database.query_all(Recipe))
+        return redirect(url_for('display_index'))
 
     if icon == '':
         icon = same_recipe.icon # use premapped icon
@@ -190,12 +190,12 @@ def edit_recipe():
         database.update_instance(Recipe, recipe_id, name=name, ingredients=str(ingredients), instructions=instructions, time=str(time), icon=icon)
     elif not allowed_file(image.filename):
         flash(f'Nur folgende Dateiformate für Bilder erlaubt: {ALLOWED_EXTENSIONS}.', 'negative')
-        return render_template('full-calendar.html', recipes=database.query_all(Recipe))
+        return redirect(url_for('display_index'))
     else:
         database.update_instance(Recipe, recipe_id, name=name, ingredients=str(ingredients), instructions=instructions, time=str(time), icon=icon, image=image.read())
         
     flash(f'Rezept {name} gespeichert.', 'positive')
-    return render_template('full-calendar.html', recipes=database.query_all(Recipe))
+    return redirect(url_for('display_index'))
     
 @app.route("/delete-recipe", methods=['POST'])
 def delete_recipe():
@@ -210,7 +210,7 @@ def delete_recipe():
     Recipe.query.filter_by(id=recipe_id).delete()
     db.session.commit()
 
-    return render_template('recipe-index.html', recipes=database.query_all(Recipe))
+    return redirect(url_for('display_index'))
 
 @app.route("/modal-recipe", methods=['POST'])
 def display_modal_recipe():
@@ -235,7 +235,22 @@ def recipe_image(recipe_id):
 @app.route("/recipe-index")
 def display_index():
     return render_template('recipe-index.html', recipes=database.query_all(Recipe))
-  
+
+@app.route("/move-meal", methods=['POST'])
+def move_meal():
+    event_date = request.form["event_date"]
+    event_name = request.form["event_name"]
+    event_delta = request.form["event_delta"]
+
+    old_date = datetime.strptime(event_date, '%Y-%m-%d') - timedelta(days=int(event_delta))
+
+    recipe = Recipe.query.filter_by(name=event_name).first()
+    event = Event.query.filter(and_(Event.date == old_date.strftime('%Y-%m-%d'), Event.fk_recipe == recipe.id)).first()
+
+    database.update_instance(Event, event.id, date=event_date)
+
+    return jsonify(success=True)
+
 @app.route('/remove-meal', methods=['POST'])
 def delete_meal_event():
     event_date = request.form['date_to_remove']
@@ -245,7 +260,7 @@ def delete_meal_event():
     Event.query.filter(and_(Event.date == event_date, Event.fk_recipe == recipe.id)).delete()
     db.session.commit()
 
-    return render_template('full-calendar.html', recipes=database.query_all(Recipe))
+    return redirect(url_for('cal_display'))
 
 @app.route("/ingredients")
 def display_ingredients():
@@ -278,4 +293,4 @@ def export_todoist():
         todoist_api.items.add(entry, project_id=shopping_list)
     todoist_api.commit()
     flash(f'Zutaten nach Todoist Einkaufsliste exportiert: {ingedients_to_export}')
-    return render_template('full-calendar.html', recipes=database.query_all(Recipe))
+    return redirect(url_for('cal_display'))
