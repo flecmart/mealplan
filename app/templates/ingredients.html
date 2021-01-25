@@ -22,16 +22,26 @@
         {% endif %}
         {% endfor %}
         <div style="text-align:center; margin-top: 5px;">
-            <button type="submit" class="btn btn-default">Todoist</button>
+            <div class="row">
+                <button class="btn btn-default" onclick="toggleAllCheckboxes();return false;">(De)select all</button>
+                <button type="submit" class="btn btn-default">Todoist</button>
+            </div>
         </div>
     </ul>
     </form>
 </div>
 
-<script type="text/javascript">
+<script>
     $('.printBtn').on('click', function (){
         window.print();
     });
+
+    function toggleAllCheckboxes() {
+        var checkboxes = document.getElementsByName('export_ingredient');
+        for (var i = 0; i < checkboxes.length; i++) {
+            checkboxes[i].checked = !checkboxes[i].checked;
+        }
+    }
 </script>
 
     
