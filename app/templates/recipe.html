@@ -92,6 +92,13 @@
         function formatIngredients(text) {
             return text.split(";").join("\n");
         };
+
+        function setPreselectedIcon(preselectedIcon) {
+            if ($('.selectpicker').val() == '')
+            {
+                $('.selectpicker').selectpicker('val', preselectedIcon); 
+            }
+        };
     </script>
 
     {% endif %}
@@ -202,7 +209,7 @@
                     </div>
                     <div class="form-group">
                         <div class="col-sm-offset-2 col-sm-10">
-                            <button type="submit" class="btn btn-default">Speichern</button>
+                            <button type="submit" class="btn btn-default" onclick="setPreselectedIcon('{{recipe.icon}}')">Speichern</button>
                         </div>
                     </div>
                 </form>

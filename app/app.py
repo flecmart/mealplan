@@ -182,9 +182,6 @@ def edit_recipe():
         flash(f'Das Rezept {name} existiert bereits.', 'negative')
         return redirect(url_for('display_index'))
 
-    if icon == '':
-        icon = same_recipe.icon # use premapped icon
-
     # if user does not select file, browser also submit an empty part without filename
     if image.filename == '':
         database.update_instance(Recipe, recipe_id, name=name, ingredients=str(ingredients), instructions=instructions, time=str(time), icon=icon)
