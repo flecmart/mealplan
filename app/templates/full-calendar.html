@@ -329,7 +329,7 @@
 			$('#calendar').fullCalendar({
 				eventRender: function (event, eventElement) {
 					if (event.imageurl) {
-						eventElement.find('div.fc-content').append('<br><br><img src="' + event.imageurl + '" width="50" height="50" >');
+						eventElement.find('div.fc-content').append('<br><br><br><br><img src="' + event.imageurl + '" width="50" height="50" >');
 					}
 				},
 				header: {
