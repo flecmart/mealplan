@@ -26,18 +26,19 @@ class Recipe(db.Model):
 
     def get_instructions(self):
         # remove step numbers (digits) if present since they are not ubiquitous in api recipes. Step nums added in template view
-        instructions = re.sub("\d+\.", "", self.instructions)
+        instructions = re.sub('\d+\.', '', self.instructions)
         
         # removes html tags
-        instructions = re.sub("<.*?>", "", instructions)
+        instructions = re.sub('<.*?>', '', instructions)
 
         # splits string at "." and casts it as list
-        instructions = instructions.split(".")
+        instructions = re.sub(r'([^c][^a])\.', r'\g<1>;;', instructions) # ignore ca.
+        instructions = instructions.split(';;')
 
         # handles cases where parentheses exist in instructions
         fresh_instructions = []
         for step in instructions:
-            step = step.replace("(", "").replace(")", "").replace("!", "")
+            step = step.replace('(', '').replace(')', '').replace('!', '')
             fresh_instructions.append(step)  
 
         # removes empty strings in list
