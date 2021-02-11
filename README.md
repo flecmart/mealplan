@@ -32,11 +32,14 @@ The app is now reachable at `localhost:5000`
 
 ### Manage recipes in a cookbook
 
-![example image cookbook](https://user-images.githubusercontent.com/10167243/107637227-13d72000-6c6e-11eb-8105-b2c2f5ee34c2.png)
+![example image cookbook](https://user-images.githubusercontent.com/10167243/107639035-a8db1880-6c70-11eb-82d1-39bfcbb30c13.png)
+
+- you can create & edit recipes with a dialog
+- import recipes by pasting links from, e.g. [chefkoch.de](https://www.chefkoch.de/) (using https://pypi.org/project/recipe-scrapers/)
 
 ### Show recipes with ingredients and instructions
 
-![example image recipe view](https://user-images.githubusercontent.com/10167243/107637096-e68a7200-6c6d-11eb-8bff-b2c35ca07963.png)
+![example image recipe view](https://user-images.githubusercontent.com/10167243/107639121-c27c6000-6c70-11eb-86f9-ec461e699027.png)
 
 ### Assign recipes in a calendar to plan meals
 
