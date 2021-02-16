@@ -31,9 +31,8 @@ class Recipe(db.Model):
         # removes html tags
         instructions = re.sub('<.*?>', '', instructions)
 
-        # splits string at "." and casts it as list
-        instructions = re.sub(r'([^c][^a])\.', r'\g<1>;;', instructions) # ignore ca.
-        instructions = instructions.split(';;')
+        # splits string at "." and ignore abbreviations.
+        instructions = re.split(r'(?<!ca)(?<!evtl)\.', instructions)
 
         # handles cases where parentheses exist in instructions
         fresh_instructions = []
