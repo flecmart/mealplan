@@ -32,7 +32,7 @@ class Recipe(db.Model):
         instructions = re.sub('<.*?>', '', instructions)
 
         # splits string at "." and ignore abbreviations.
-        instructions = re.split(r'(?<!ca)(?<!evtl)\.', instructions)
+        instructions = re.split(r'(?<!ca)(?<!evtl)\.', instructions, flags=re.IGNORECASE)
 
         # handles cases where parentheses exist in instructions
         fresh_instructions = []
