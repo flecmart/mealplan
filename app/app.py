@@ -12,6 +12,9 @@ from flask import request, flash, render_template, jsonify, redirect
 from sqlalchemy import and_
 from recipe_scrapers import scrape_me
 from todoist.api import TodoistAPI
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+
 from . import create_app
 from . import database
 from . import helper_functs
@@ -36,6 +39,29 @@ def allowed_file(filename):
 @app.route("/")
 def index():
     return render_template('full-calendar.html', recipes=database.query_all(Recipe))
+
+@app.route('/screenshot', methods=['GET'])
+def screenshot_week():
+    chrome_options = Options()
+    chrome_options.add_argument("--window-size=1920,1080")
+    chrome_options.add_argument("--disable-extensions")
+    chrome_options.add_argument("--start-maximized")
+    chrome_options.add_argument('--headless')
+    chrome_options.add_argument('--disable-gpu')
+    chrome_options.add_argument('--disable-dev-shm-usage')
+    chrome_options.add_argument('--no-sandbox')
+    driver = webdriver.Chrome(options=chrome_options)
+    # TODO move to enironment variable
+    # TODO cronjob on py that calls the screenshot and copies the file to py (host where?)
+    driver.get("http://homeassistant:5000")
+    driver.find_element_by_xpath('//*[@id="calendar"]/div[1]/div[2]/div/button[2]').click()
+    driver.get_screenshot_as_file('/app/static/week.png')
+    return "screenshot saved"
+
+# TODO: implement route to show latest screenshot
+# https://stackoverflow.com/questions/56695991/how-to-render-template-with-image-in-flask
+
+# TODO: implement route to delete all events that are longer than 1 month away
 
 @app.route('/test', methods=['GET'])
 def show_data():
