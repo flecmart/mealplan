@@ -11,7 +11,7 @@ RUN apk update --no-cache \
 && pip install --no-cache-dir -r requirements.txt \
 && apk del .build-deps
 # install dependant libs
-RUN apk add postgresql-libs libpq libxslt chromium  chromium-chromedriver --no-cache
+RUN apk add postgresql-libs libpq libxslt chromium-chromedriver chromium --no-cache
 # download nltk data for natural language processing
 RUN python -c "import nltk; nltk.download('punkt'); nltk.download('averaged_perceptron_tagger')"
 EXPOSE 5000
