@@ -4,6 +4,7 @@ initialize_flask_server_debugger_if_needed()
 
 import os
 import json
+import time
 
 from datetime import datetime, timedelta
 from io import BytesIO
@@ -36,30 +37,35 @@ ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif'])
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+def bust_cache_url_for(endpoint, **values):
+    if endpoint == 'static':
+        filename = values.get('filename', None)
+        if filename:
+            file_path = os.path.join(app.root_path,
+                                     endpoint, filename)
+            values['q'] = int(os.stat(file_path).st_mtime)
+    return url_for(endpoint, **values)
+
 @app.route("/")
 def index():
     return render_template('full-calendar.html', recipes=database.query_all(Recipe))
 
-@app.route('/screenshot', methods=['GET'])
+@app.route('/week', methods=['GET'])
 def screenshot_week():
     chrome_options = Options()
-    chrome_options.add_argument("--window-size=1920,1080")
-    chrome_options.add_argument("--disable-extensions")
-    chrome_options.add_argument("--start-maximized")
     chrome_options.add_argument('--headless')
+    chrome_options.add_argument('--disable-extensions')
     chrome_options.add_argument('--disable-gpu')
     chrome_options.add_argument('--disable-dev-shm-usage')
     chrome_options.add_argument('--no-sandbox')
     driver = webdriver.Chrome(options=chrome_options)
-    # TODO move to enironment variable
-    # TODO cronjob on py that calls the screenshot and copies the file to py (host where?)
-    driver.get("http://homeassistant:5000")
+    driver.get(os.environ["SCREENSHOT_URL"])
     driver.find_element_by_xpath('//*[@id="calendar"]/div[1]/div[2]/div/button[2]').click()
-    driver.get_screenshot_as_file('/app/static/week.png')
-    return "screenshot saved"
-
-# TODO: implement route to show latest screenshot
-# https://stackoverflow.com/questions/56695991/how-to-render-template-with-image-in-flask
+    element = driver.find_element_by_xpath('//*[@id="calendar"]/div[2]')
+    time.sleep(3)
+    element.screenshot('/app/static/week.png')
+    driver.quit()
+    return redirect(bust_cache_url_for('static', filename='week.png'))
 
 # TODO: implement route to delete all events that are longer than 1 month away
 
