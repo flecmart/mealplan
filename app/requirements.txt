@@ -3,6 +3,7 @@ flask-sqlalchemy~=2.4.4
 psycopg2~=2.8.6
 nltk~=3.5
 selenium~=3.141.0
+Pillow~=8.2.0
 pytest
 debugpy
 recipe-scrapers

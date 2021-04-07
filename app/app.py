@@ -15,6 +15,7 @@ from recipe_scrapers import scrape_me
 from todoist.api import TodoistAPI
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
+from PIL import Image
 
 from . import create_app
 from . import database
@@ -58,12 +59,17 @@ def screenshot_week():
     chrome_options.add_argument('--disable-gpu')
     chrome_options.add_argument('--disable-dev-shm-usage')
     chrome_options.add_argument('--no-sandbox')
+    chrome_options.add_argument('--hide-scrollbars')
     driver = webdriver.Chrome(options=chrome_options)
     driver.get(os.environ["SCREENSHOT_URL"])
     driver.find_element_by_xpath('//*[@id="calendar"]/div[1]/div[2]/div/button[2]').click()
-    element = driver.find_element_by_xpath('//*[@id="calendar"]/div[2]')
     time.sleep(3)
+    element = driver.find_element_by_xpath('//*[@id="calendar"]/div[2]')
     element.screenshot('/app/static/week.png')
+    im = Image.open('/app/static/week.png')
+    im = im.resize((800,600))
+    im = im.rotate(90, expand=True)
+    im.save('/app/static/week.png')
     driver.quit()
     return redirect(bust_cache_url_for('static', filename='week.png'))
 
