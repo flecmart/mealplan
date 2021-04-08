@@ -340,7 +340,9 @@ def screenshot_week():
 @app.route("/purge")
 def purge_events():
     """
-    Purge events from calendar that are older than 3 months
+    Purge old events from calender.
+    Possible Query parameter: before=yyyy-mm-dd
+    Default behavior: purge events older than 6 months
     """
     before_date = request.args.get('before')
 
