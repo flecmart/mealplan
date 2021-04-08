@@ -30,7 +30,7 @@ def get_todoist_project_id(api, name):
 
 todoist_api = TodoistAPI(os.environ['TODOIST_TOKEN'])
 todoist_api.sync()
-shopping_list = get_todoist_project_id(todoist_api, 'Einkaufsliste')
+shopping_list = get_todoist_project_id(todoist_api, os.environ['TODOIST_LIST'])
 
 app = create_app()
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif'])
@@ -50,30 +50,6 @@ def bust_cache_url_for(endpoint, **values):
 @app.route("/")
 def index():
     return render_template('full-calendar.html', recipes=database.query_all(Recipe))
-
-@app.route('/week', methods=['GET'])
-def screenshot_week():
-    chrome_options = Options()
-    chrome_options.add_argument('--headless')
-    chrome_options.add_argument('--disable-extensions')
-    chrome_options.add_argument('--disable-gpu')
-    chrome_options.add_argument('--disable-dev-shm-usage')
-    chrome_options.add_argument('--no-sandbox')
-    chrome_options.add_argument('--hide-scrollbars')
-    driver = webdriver.Chrome(options=chrome_options)
-    driver.get(os.environ["SCREENSHOT_URL"])
-    driver.find_element_by_xpath('//*[@id="calendar"]/div[1]/div[2]/div/button[2]').click()
-    time.sleep(3)
-    element = driver.find_element_by_xpath('//*[@id="calendar"]/div[2]')
-    element.screenshot('/app/static/week.png')
-    im = Image.open('/app/static/week.png')
-    im = im.resize((800,600))
-    im = im.rotate(90, expand=True)
-    im.save('/app/static/week.png')
-    driver.quit()
-    return redirect(bust_cache_url_for('static', filename='week.png'))
-
-# TODO: implement route to delete all events that are longer than 1 month away
 
 @app.route('/test', methods=['GET'])
 def show_data():
@@ -305,7 +281,7 @@ def display_ingredients():
     start = request.args.get('start')
     end = request.args.get('end')
 
-    if start == 'undefined' or end == 'undefined':
+    if start == 'undefined' or start is None or end == 'undefined' or end is None:
         start_date = helper_functs.get_today_string()
         end_date = helper_functs.get_week_from_string()
         events = Event.query.filter(Event.date >= helper_functs.get_start_of_week())
@@ -323,9 +299,55 @@ def display_ingredients():
 
 @app.route("/export-todoist", methods = ['POST'])
 def export_todoist():
+    """Export checked ingredients to configured todoist list.
+    """
     ingedients_to_export = request.form.getlist('export_ingredient')
     for entry in ingedients_to_export:
         todoist_api.items.add(entry, project_id=shopping_list)
     todoist_api.commit()
     flash(f'Zutaten nach Todoist Einkaufsliste exportiert: {ingedients_to_export}')
+    return redirect(url_for('cal_display'))
+
+@app.route('/week', methods=['GET'])
+def screenshot_week():
+    """Generates a screenshot of the current week and returns it. 
+    The resolution is 600x800 to be compatible with kindle onlinescreensaver.
+
+    Returns:
+        png: Image of current week
+    """
+    chrome_options = Options()
+    chrome_options.add_argument('--headless')
+    chrome_options.add_argument('--disable-extensions')
+    chrome_options.add_argument('--disable-gpu')
+    chrome_options.add_argument('--disable-dev-shm-usage')
+    chrome_options.add_argument('--no-sandbox')
+    chrome_options.add_argument('--hide-scrollbars')
+    driver = webdriver.Chrome(options=chrome_options)
+    driver.get(os.environ["SCREENSHOT_URL"])
+    driver.find_element_by_xpath('//*[@id="calendar"]/div[1]/div[2]/div/button[2]').click()
+    time.sleep(3)
+    element = driver.find_element_by_xpath('//*[@id="calendar"]/div[2]')
+    element.screenshot('/app/static/week.png')
+    im = Image.open('/app/static/week.png')
+    im = im.resize((800,600))
+    im = im.rotate(90, expand=True)
+    im.save('/app/static/week.png')
+    driver.quit()
+    return redirect(bust_cache_url_for('static', filename='week.png'))
+
+# TODO: implement route to delete all events that are longer than 1 month away
+@app.route("/purge")
+def purge_events():
+    """
+    Purge events from calendar that are older than 3 months
+    """
+    before_date = request.args.get('before')
+
+    if before_date == 'undefined' or before_date is None:
+        before_date = helper_functs.get_date_six_months_ago()
+    
+    Event.query.filter(Event.date <= before_date).delete()
+    db.session.commit()
+    
     return redirect(url_for('cal_display'))

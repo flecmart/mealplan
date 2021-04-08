@@ -13,8 +13,11 @@ words_not_recognized_as_nouns = ['flour', 'olive', 'oz']
 list_of_pos = ['NN', 'NNP', 'NNS', 'NNPS']
 
 def get_today_string():
-    today_string = "{date:%d.%m}".format(date=datetime.datetime.now())
-    return today_string
+    return "{date:%d.%m}".format(date=datetime.datetime.now())
+
+def get_date_six_months_ago():
+    six_months_ago = datetime.datetime.now() - datetime.timedelta(6*30)
+    return "{date:%Y-%m-%d}".format(date=six_months_ago)
 
 def get_week_from_string():
     today = datetime.datetime.today()
