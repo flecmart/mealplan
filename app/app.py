@@ -352,4 +352,4 @@ def purge_events():
     Event.query.filter(Event.date <= before_date).delete()
     db.session.commit()
     
-    return redirect(url_for('cal_display'))
+    return jsonify(success=True)
