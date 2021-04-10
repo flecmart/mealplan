@@ -329,14 +329,13 @@ def screenshot_week():
     time.sleep(3)
     element = driver.find_element_by_xpath('//*[@id="calendar"]/div[2]')
     element.screenshot('/app/static/week.png')
-    im = Image.open('/app/static/week.png')
+    im = Image.open('/app/static/week.png').convert('LA')
     im = im.resize((800,600))
     im = im.rotate(90, expand=True)
     im.save('/app/static/week.png')
     driver.quit()
     return redirect(bust_cache_url_for('static', filename='week.png'))
 
-# TODO: implement route to delete all events that are longer than 1 month away
 @app.route("/purge")
 def purge_events():
     """
