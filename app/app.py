@@ -329,7 +329,7 @@ def screenshot_week():
     time.sleep(3)
     element = driver.find_element_by_xpath('//*[@id="calendar"]/div[2]')
     element.screenshot('/app/static/week.png')
-    im = Image.open('/app/static/week.png').convert('LA')
+    im = Image.open('/app/static/week.png').convert('L')
     im = im.resize((800,600))
     im = im.rotate(90, expand=True)
     im.save('/app/static/week.png')
