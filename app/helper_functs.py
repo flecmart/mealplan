@@ -6,9 +6,10 @@ import re
 from fractions import Fraction
 
 list_of_measures = ['Pck', 'Packung', 'TL', 'EL', 'Esslöffel', 'Teelöffel', 'liter', 'l' 'can', 'cup', 'cups', 'pint', 'quart', 'tablespoons', 'tablespoon', 'tbs', 'tb', 't', 'ts', 
-                    'teaspoon', 'tsps', 'gr', 'grams', 'gram', 'g' ,'kilo', 'kilogram', 'kg', 'dash', 'pinch', 'sprig', 'oz', 'ounce', 'ounces', 'cloves', 'lb', 'pound', 'pd']
+                    'teaspoon', 'tsps', 'gr', 'grams', 'gram', 'g' ,'kilo', 'kilogram', 'kg', 'dash', 'pinch', 'sprig', 'oz', 'ounce', 'ounces', 'cloves', 'lb', 'pound', 'pd', 'ml',
+                    'milliliter']
 
-words_not_recognized_as_nouns = ['flour', 'olive', 'oz']
+words_not_recognized_as_nouns = ['flour', 'olive', 'oz', 'Lauch', 'Couscous']
 
 list_of_pos = ['NN', 'NNP', 'NNS', 'NNPS']
 
@@ -97,8 +98,7 @@ def get_measure(ingredient):
     ''' parses the list for a noun that matches a unit of measure returns string of that noun'''
     nouns = get_nouns(ingredient)
     for noun in nouns:
-        noun = noun.lower()
-        if noun in list_of_measures: 
+        if noun.upper() in map(str.upper, list_of_measures): 
             return noun
         else:
             return ""
@@ -137,12 +137,22 @@ def make_ingredient_dict(list_of_ingredients):
         amt = get_amount(ingredient)
         measurement = get_measure(ingredient)
         k_list = remove_amts_measures(ingredient)
+        if not k_list:
+            k_list.append(ingredient)
+            k_list = k_list[0].split(' ')
+            try:
+                k_list.remove(str(amt))
+            except:
+                pass
+            try:
+                k_list.remove(measurement)
+            except:
+                pass
         k_name = ' '.join(k_list)
         key_name = k_name.title() # thus parmesan == Parmesan == PARMESAN
         # in the case of say water or salt and pepper
         if amt == None:# and measurement == "whole":
             amt = 1
-            measure = ""
 
         ingredient_dict[key_name] = [amt, measurement]
 
@@ -176,9 +186,7 @@ def remove_amts_measures(string_x):
     measure_to_remove = get_measure(string_x)
     noun_list = get_nouns(string_x)
     
-    # BUG point can't remove because s has been dropped for comparisons
     try:
-        #list(string_x).remove(measure_to_remove)
         noun_list.remove(measure_to_remove)
     except ValueError:
         # no measure to remove
