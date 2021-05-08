@@ -139,7 +139,10 @@ def make_shopping_list(defaultdict_of_lists_of_ingredients):
         for item in ingred_dict:
             if item in big_dict_of_ingredients:
                 try:
+                    # add amount
                     big_dict_of_ingredients[item][0] += ingred_dict[item][0]
+                    # add recipe reference
+                    big_dict_of_ingredients[item][2] += ' & ' + ingred_dict[item][2]
                 except TypeError:
                     pass
             else:
