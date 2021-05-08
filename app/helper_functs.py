@@ -95,45 +95,18 @@ def get_amount(ingredient_string):
                             pass
                             
 def get_measure(ingredient):
-    ''' parses the list for a noun that matches a unit of measure returns string of that noun'''
-    nouns = get_nouns(ingredient)
-    for noun in nouns:
-        if noun.upper() in map(str.upper, list_of_measures): 
-            return noun
-        else:
-            return ""
-
-def convert_amt_to_oz(measure, amt):
-    ''' converts mesures into ounces for ease of conversion at future date?'''
-    if measure == 'whole':
-        # later we can use the if int conditional to test for whole foods
-        return int(1)
-    if measure == 'can':
-        # use valueError later to test for cans vs ounce ampunts ?
-        return "CAN"
-    elif measure == 'cup':
-        oz = amt * 8
-        return oz
-    elif measure == 'pint':
-        oz = amt * 16
-        return oz
-    elif measure == 'tb':
-        oz = amt * 0.5
-        return oz
-    elif measure == 'tsp':
-        oz = amt * 0.16667
-        return oz
-    elif measure == 'gram':
-        oz = amt * 0.035273
-
-def convert_amt_to_metric(measure, amt):
-    ''' converts american measures to metric grams '''
-    return convert_amt_to_oz(measure, amt) * 28.3495
+    ''' parses the list for a word that matches a unit of measure and returns that measure or ""'''
+    words = ingredient.split()
+    for word in words:
+        if word.upper() in map(str.upper, list_of_measures): 
+            return word
+    return ""
 
 def make_ingredient_dict(list_of_ingredients):
     ''' takes a list of ingredients and returns a dictionary of key=ingredient, value= number of ounces '''
     ingredient_dict = {}
     for ingredient in list_of_ingredients:
+        ingredient = remove_german_recipe_plural(ingredient)
         amt = get_amount(ingredient)
         measurement = get_measure(ingredient)
         k_list = remove_amts_measures(ingredient)
@@ -192,3 +165,15 @@ def remove_amts_measures(string_x):
         # no measure to remove
         pass
     return noun_list
+
+def remove_german_recipe_plural(string_ingredient):
+    '''remove plural from german ingrediants in brackts, e.g. Zwiebel(n) -> Zwiebel'''
+    words = string_ingredient.split()
+    stripped_words = []
+    regex = re.compile(r"([a-zA-Z]+)(\([^\)]+\))")
+    for word in words:
+        if regex.match(word):
+            stripped_words.append(regex.sub(r"\1", word))
+        else:
+            stripped_words.append(word)
+    return (' ').join(stripped_words)
