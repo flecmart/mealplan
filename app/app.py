@@ -16,6 +16,7 @@ from todoist.api import TodoistAPI
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from PIL import Image
+from collections import defaultdict
 
 from . import create_app
 from . import database
@@ -290,10 +291,10 @@ def display_ingredients():
         end_date = "{date:%d.%m}".format(date=datetime.strptime(end, '%Y-%m-%d').date())
         events = Event.query.filter(Event.date.between(start, end))
 
-    ingredient_lists = []
+    ingredient_lists = defaultdict(list)
     for event in events:
         recipe = Recipe.query.filter_by(id=event.fk_recipe).first()
-        ingredient_lists.append(recipe.get_ingredients_list())
+        ingredient_lists[recipe.name] = (recipe.get_ingredients_list())
     
     return render_template('ingredients.html', ingredients_dict=helper_functs.make_shopping_list(ingredient_lists), start=start_date, end=end_date)
 

@@ -102,7 +102,7 @@ def get_measure(ingredient):
             return word
     return ""
 
-def make_ingredient_dict(list_of_ingredients):
+def make_ingredient_dict(recipe, list_of_ingredients):
     ''' takes a list of ingredients and returns a dictionary of key=ingredient, value= number of ounces '''
     ingredient_dict = {}
     for ingredient in list_of_ingredients:
@@ -127,15 +127,15 @@ def make_ingredient_dict(list_of_ingredients):
         if amt == None:# and measurement == "whole":
             amt = 1
 
-        ingredient_dict[key_name] = [amt, measurement]
+        ingredient_dict[key_name] = [amt, measurement, recipe]
 
     return ingredient_dict
 
-def make_shopping_list(list_of_lists_of_ingredients):
+def make_shopping_list(defaultdict_of_lists_of_ingredients):
     ''' takes a list of list returns one dict with ingred as key '''
     big_dict_of_ingredients = {}
-    for ingred_list in list_of_lists_of_ingredients:
-        ingred_dict = make_ingredient_dict(ingred_list)
+    for recipe in defaultdict_of_lists_of_ingredients:
+        ingred_dict = make_ingredient_dict(recipe, defaultdict_of_lists_of_ingredients[recipe])
         for item in ingred_dict:
             if item in big_dict_of_ingredients:
                 try:

@@ -18,7 +18,7 @@
         <!-- sorted alphabetically for now -->
         {% for k, v in ingredients_dict.items()| sort %}
         {% if k and v != None %}
-        <li><input type="checkbox" name="export_ingredient" value="{{ v[0] }} {{ v[1] }}  {{ k }}"> {{ v[0] }} {{ v[1] }}  {{ k }}</li>
+        <li><input type="checkbox" name="export_ingredient" value="{{ v[0] }} {{ v[1] }}  {{ k }}"> {{ v[0] }} {{ v[1] }}  {{ k }} <label>{{v[2]}}</label></li>
         {% endif %}
         {% endfor %}
         <div style="text-align:center; margin-top: 5px;">
