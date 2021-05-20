@@ -3,6 +3,7 @@ import nltk
 import unicodedata
 import re
 
+from flask import flash
 from fractions import Fraction
 
 list_of_measures = ['Pck', 'Packung', 'TL', 'EL', 'Esslöffel', 'Teelöffel', 'liter', 'l' 'can', 'cup', 'cups', 'pint', 'quart', 'tablespoons', 'tablespoon', 'tbs', 'tb', 't', 'ts', 
@@ -126,8 +127,15 @@ def make_ingredient_dict(recipe, list_of_ingredients):
         # in the case of say water or salt and pepper
         if amt == None:# and measurement == "whole":
             amt = 1
-
-        ingredient_dict[key_name] = [amt, measurement, recipe]
+        
+        if key_name in ingredient_dict:
+            try:
+                # add amount
+                ingredient_dict[key_name][0] += amt
+            except TypeError:
+                flash(f'Could nto add amount "{amt}" to "{ingredient_dict[key_name]}"!')
+        else:
+            ingredient_dict[key_name] = [amt, measurement, recipe]
 
     return ingredient_dict
 
@@ -144,7 +152,7 @@ def make_shopping_list(defaultdict_of_lists_of_ingredients):
                     # add recipe reference
                     big_dict_of_ingredients[item][2] += ' & ' + ingred_dict[item][2]
                 except TypeError:
-                    pass
+                    flash(f'Could not add amount "{ingred_dict[item][0]}" to "{big_dict_of_ingredients[item]}"!')
             else:
                 big_dict_of_ingredients[item] = ingred_dict[item]
 
