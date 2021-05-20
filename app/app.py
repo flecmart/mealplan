@@ -294,7 +294,7 @@ def display_ingredients():
     ingredient_lists = defaultdict(list)
     for event in events:
         recipe = Recipe.query.filter_by(id=event.fk_recipe).first()
-        ingredient_lists[recipe.name] = (recipe.get_ingredients_list())
+        ingredient_lists[recipe.name] += (recipe.get_ingredients_list())
     
     return render_template('ingredients.html', ingredients_dict=helper_functs.make_shopping_list(ingredient_lists), start=start_date, end=end_date)
 
