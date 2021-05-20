@@ -57,7 +57,7 @@ def get_amount(ingredient_string):
             return num
         except ValueError:
             try:
-                fl = float(word)
+                fl = float(str(word).replace(',','.'))
                 return fl
             except ValueError:
                 try:
@@ -69,7 +69,7 @@ def get_amount(ingredient_string):
                     # try and see if unicode
                     try: 
                         uni = ord(word)
-                        # use unicode conversion function here
+                        # use unicode conmversion function here
                         if uni in range(8528-8543) or uni == 188 or uni == 189 or uni == 190:
                             uni_fl = unicodedata.numeric(chr(uni))
                             return uni_fl 
