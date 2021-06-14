@@ -10,7 +10,7 @@ list_of_measures = ['Pck', 'Packung', 'TL', 'EL', 'Esslöffel', 'Teelöffel', 'l
                     'teaspoon', 'tsps', 'gr', 'grams', 'gram', 'g' ,'kilo', 'kilogram', 'kg', 'dash', 'pinch', 'sprig', 'oz', 'ounce', 'ounces', 'cloves', 'lb', 'pound', 'pd', 'ml',
                     'milliliter']
 
-words_not_recognized_as_nouns = ['flour', 'olive', 'oz', 'Lauch', 'Couscous']
+words_not_recognized_as_nouns = ['flour', 'olive', 'oz', 'Lauch', 'Couscous', 'Kreuzkümmelpulver']
 
 list_of_pos = ['NN', 'NNP', 'NNS', 'NNPS']
 
