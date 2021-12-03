@@ -13,7 +13,7 @@
         </div>
 
     </div>
-    <form id="post-form" class="form-group" action="{{ url_for('export_todoist') }}" method="post" role="form">
+    <form id="post-form" class="form-group" role="form">
     <ul id="ingred-list" style="margin-top: 20px; list-style-type:none; margin: 0 auto; display: table;">
         <!-- sorted alphabetically for now -->
         {% for k, v in ingredients_dict.items()| sort %}
@@ -32,15 +32,18 @@
 </div>
 
 <script>
-     $('.printBtn').on('click', function (){
+    $('.printBtn').on('click', function (){
         window.print();
-
+    });
+     
     function toggleAllCheckboxes() {
         let checkboxes = document.getElementsByName('export_ingredient');
         for (let i = 0; i < checkboxes.length; i++) {
             checkboxes[i].checked = !checkboxes[i].checked;
         }
     }
+
+    // submit hanlder
 
     $(function() {
         $('#post-form').submit(handleSubmit);
@@ -52,7 +55,7 @@
             .addClass('disabled')
             .attr('value', 'Please Wait...');
 
-        // Let Python do it's thing
+        // submit action
         let request = $.ajax({
             method: "POST",
             url: "{{ url_for('export_todoist') }}",
@@ -60,10 +63,11 @@
         });
 
         request.done(function(response) {
-            // Display error, if any occured
             if (response.error) {
                 alert(response.error);
             }
+            // redirect
+            window.location.replace(response)
             $submit.prop('disabled', false).removeClass('disabled');
         });
 

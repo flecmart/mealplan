@@ -307,7 +307,7 @@ def export_todoist():
         todoist_api.items.add(entry, project_id=shopping_list)
     todoist_api.commit()
     flash(f'Zutaten nach Todoist Einkaufsliste exportiert: {ingedients_to_export}')
-    return redirect(url_for('cal_display'))
+    return url_for('cal_display') # redirect happens in js handler
 
 @app.route('/week', methods=['GET'])
 def screenshot_week():
