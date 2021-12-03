@@ -13,7 +13,7 @@
         </div>
 
     </div>
-    <form class="form-group" action="{{ url_for('export_todoist') }}" method="post" role="form">
+    <form id="post-form" class="form-group" action="{{ url_for('export_todoist') }}" method="post" role="form">
     <ul id="ingred-list" style="margin-top: 20px; list-style-type:none; margin: 0 auto; display: table;">
         <!-- sorted alphabetically for now -->
         {% for k, v in ingredients_dict.items()| sort %}
@@ -24,7 +24,7 @@
         <div style="text-align:center; margin-top: 5px;">
             <div class="row">
                 <button class="btn btn-default" onclick="toggleAllCheckboxes();return false;">(De)select all</button>
-                <button type="submit" class="btn btn-default">Todoist</button>
+                <button id="submit-post-form" type="submit" class="btn btn-default">Todoist</button>
             </div>
         </div>
     </ul>
@@ -32,17 +32,45 @@
 </div>
 
 <script>
-    $('.printBtn').on('click', function (){
+     $('.printBtn').on('click', function (){
         window.print();
-    });
 
     function toggleAllCheckboxes() {
-        var checkboxes = document.getElementsByName('export_ingredient');
-        for (var i = 0; i < checkboxes.length; i++) {
+        let checkboxes = document.getElementsByName('export_ingredient');
+        for (let i = 0; i < checkboxes.length; i++) {
             checkboxes[i].checked = !checkboxes[i].checked;
         }
     }
+
+    $(function() {
+        $('#post-form').submit(handleSubmit);
+    });
+
+    function handleSubmit(e) {
+        let $submit = $('#submit-post-form');
+        $submit.prop('disabled', true)
+            .addClass('disabled')
+            .attr('value', 'Please Wait...');
+
+        // Let Python do it's thing
+        let request = $.ajax({
+            method: "POST",
+            url: "{{ url_for('export_todoist') }}",
+            data: $('#post-form').serialize()
+        });
+
+        request.done(function(response) {
+            // Display error, if any occured
+            if (response.error) {
+                alert(response.error);
+            }
+            $submit.prop('disabled', false).removeClass('disabled');
+        });
+
+        // Prevent regular submit functionality
+        e.preventDefault();
+        return false;
+    }
 </script>
 
-    
 {% endblock %}
