@@ -309,8 +309,8 @@
 
 	<script>
 		// dynamic url for ingredients
-		var selected_start;
-		var selected_end;
+		let selected_start;
+		let selected_end;
 
 		function generate_ingredients_url() {
 			return "/ingredients?start=" + selected_start + "&end=" + selected_end;
@@ -322,7 +322,7 @@
 
 		// When the user clicks on div, open the popup
 		function myFunction() {
-			var popup = document.getElementById("myPopup");
+			let popup = document.getElementById("myPopup");
 			popup.classList.toggle("show");
 		}
 
@@ -353,10 +353,9 @@
 						url: 'modal-recipe',
 						data: recipe_data = { "recipe_date": event.start.format(), "recipe_name": event.title },
 						type: 'POST',
-						async: true
 					}).done(function (response) {
-						//console.log(response);
-						$("#content").html(response);
+						// Parse recipe.html content before inserting it to the DOM to prevent script execution
+						$("#content").html($($.parseHTML(response)));
 						$("#recipeModal").modal("toggle");
 					}).fail(function (error) {
 						console.log(error);
@@ -372,8 +371,6 @@
 					selected_end = end.add(-1, 'days').format()
 				},
 				eventDrop: function(event, delta, revertFunc) { 
-					//console.log(event);
-					//console.log(delta);
 					$.ajax({
 						url: '/move-meal',
 						type: 'POST',
@@ -407,12 +404,6 @@
 			$("#addMealDate").val(date);
 			$("#addMeal").modal("toggle");
 		}
-
-		//reload page after recipe modal after recipe modal
-		$('#recipeModal').on('hidden.bs.modal', function () {
-			console.log("reload...")
-			document.location.reload();
-		})
 
 	</script>
 
