@@ -8,3 +8,4 @@ pytest
 debugpy
 recipe-scrapers
 todoist-python
+markupsafe==2.0.1
