@@ -2,7 +2,7 @@ version: '2.1'
 services:
   database:
     container_name: mealplan_db
-    image: postgres:latest
+    image: postgres:13
     restart: always
     env_file: environment.conf
     ports:
@@ -29,7 +29,7 @@ services:
 
   backups:
     container_name: mealplan_backups
-    image: prodrigestivill/postgres-backup-local
+    image: prodrigestivill/postgres-backup-local:13-alpine-af916da
     restart: always
     user: postgres:postgres
     volumes:
