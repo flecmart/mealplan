@@ -129,12 +129,12 @@ def add_recipe():
 
     # if user does not select file, browser also submit an empty part without filename
     if image.filename == '':
-        database.add_instance(Recipe, name=name, ingredients=str(ingredients), instructions=instructions, time=str(time), icon=icon, image=None)
+        database.add_instance(Recipe, name=name, ingredients=str(ingredients), instructions=instructions, time=int(time), icon=icon, image=None)
     elif not allowed_file(image.filename):
         flash(f'Nur folgende Dateiformate für Bilder erlaubt: {ALLOWED_EXTENSIONS}.', 'negative')
         return redirect(url_for('cal_display'))
     else:
-        database.add_instance(Recipe, name=name, ingredients=str(ingredients), instructions=instructions, time=str(time), icon=icon, image=image.read())
+        database.add_instance(Recipe, name=name, ingredients=str(ingredients), instructions=instructions, time=int(time), icon=icon, image=image.read())
         
     flash(f'Rezept {name} gespeichert.', 'positive')
     return redirect(url_for('display_index'))
@@ -163,12 +163,12 @@ def import_recipe():
     # if user does not select file, browser also submit an empty part without filename
     if image.filename == '':
         image_stream = BytesIO(urlopen(scraper.image()).read())
-        database.add_instance(Recipe, name=name, ingredients=str(ingredients), instructions=instructions, time=str(time), icon=icon, image=image_stream.read())
+        database.add_instance(Recipe, name=name, ingredients=str(ingredients), instructions=instructions, time=int(time), icon=icon, image=image_stream.read())
     elif not allowed_file(image.filename):
         flash(f'Nur folgende Dateiformate für Bilder erlaubt: {ALLOWED_EXTENSIONS}.', 'negative')
         return redirect(url_for('cal_display'))
     else:
-        database.add_instance(Recipe, name=name, ingredients=str(ingredients), instructions=instructions, time=str(time), icon=icon, image=image.read())
+        database.add_instance(Recipe, name=name, ingredients=str(ingredients), instructions=instructions, time=int(time), icon=icon, image=image.read())
         
     flash(f'Rezept {name} gespeichert.', 'positive')
     return redirect(url_for('display_index'))
@@ -199,12 +199,12 @@ def edit_recipe():
 
     # if user does not select file, browser also submit an empty part without filename
     if image.filename == '':
-        database.update_instance(Recipe, recipe_id, name=name, ingredients=str(ingredients), instructions=instructions, time=str(time), icon=icon)
+        database.update_instance(Recipe, recipe_id, name=name, ingredients=str(ingredients), instructions=instructions, time=int(time), icon=icon)
     elif not allowed_file(image.filename):
         flash(f'Nur folgende Dateiformate für Bilder erlaubt: {ALLOWED_EXTENSIONS}.', 'negative')
         return redirect(url_for('display_index'))
     else:
-        database.update_instance(Recipe, recipe_id, name=name, ingredients=str(ingredients), instructions=instructions, time=str(time), icon=icon, image=image.read())
+        database.update_instance(Recipe, recipe_id, name=name, ingredients=str(ingredients), instructions=instructions, time=int(time), icon=icon, image=image.read())
         
     flash(f'Rezept {name} gespeichert.', 'positive')
     return redirect(url_for('display_index'))
