@@ -4,8 +4,7 @@ psycopg2~=2.8.6
 nltk~=3.5
 selenium~=3.141.0
 Pillow~=8.2.0
-pytest~=6.2.5
 debugpy~=1.6.2
-recipe-scrapers~=13.33.0
+recipe-scrapers~=14.11.0
 todoist-python~=8.1.3
 markupsafe==2.0.1
