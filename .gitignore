@@ -129,3 +129,6 @@ dmypy.json
 
 # private config
 environment.conf
+
+# local vscode settings
+.vscode
