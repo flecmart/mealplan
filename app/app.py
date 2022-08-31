@@ -12,7 +12,7 @@ from urllib.request import urlopen
 from flask import request, flash, render_template, jsonify, redirect
 from sqlalchemy import and_
 from recipe_scrapers import scrape_me
-from todoist.api import TodoistAPI
+from todoist_api_python.api import TodoistAPI
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from PIL import Image
@@ -24,14 +24,13 @@ from . import helper_functs
 from .models import db, Recipe, Event
 
 def get_todoist_project_id(api, name):
-    for project in api.state['projects']:
-        if project['name'] == name:
-            return project['id']
+    for project in api.get_projects():
+        if project.name == name:
+            return project.id
     return None
 
 todoist_api = TodoistAPI(os.environ['TODOIST_TOKEN'])
-todoist_api.sync()
-shopping_list = get_todoist_project_id(todoist_api, os.environ['TODOIST_LIST'])
+shopping_list_id = get_todoist_project_id(todoist_api, os.environ['TODOIST_LIST'])
 
 app = create_app()
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif'])
@@ -304,8 +303,7 @@ def export_todoist():
     """
     ingedients_to_export = request.form.getlist('export_ingredient')
     for entry in ingedients_to_export:
-        todoist_api.items.add(entry, project_id=shopping_list)
-    todoist_api.commit()
+        todoist_api.add_task(content=entry, project_id=shopping_list_id)
     flash(f'Zutaten nach Todoist Einkaufsliste exportiert: {ingedients_to_export}')
     return url_for('cal_display') # redirect happens in js handler
 
