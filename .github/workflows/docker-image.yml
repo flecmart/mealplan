@@ -4,13 +4,11 @@ on:
   push:
     branches:
       - 'main'
-      - 'development'
     tags:
       - 'v*.*.*'
   pull_request:
     branches:
       - 'main'
-      - 'development'
 
 # permissions are needed if pushing to ghcr.io
 permissions: 
