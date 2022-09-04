@@ -17,7 +17,7 @@ services:
 
   app:
     container_name: mealplan
-    image: ghcr.io/flecmart/mealplan
+    build: app
     restart: always
     env_file: environment.conf
     ports:
