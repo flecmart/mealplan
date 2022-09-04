@@ -7,4 +7,4 @@ Pillow~=8.2.0
 debugpy~=1.6.2
 recipe-scrapers~=14.11.0
 todoist-api-python~=1.1.1
-markupsafe==2.0.1
+markupsafe==2.1.1
