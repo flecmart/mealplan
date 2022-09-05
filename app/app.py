@@ -51,21 +51,6 @@ def bust_cache_url_for(endpoint, **values):
 def index():
     return render_template('full-calendar.html', recipes=database.query_all(Recipe))
 
-@app.route('/test', methods=['GET'])
-def show_data():
-    recipes = database.query_all(Recipe)
-    recipe_json = []
-    for recipe in recipes:
-        new_recipe = {
-            "id": recipe.id,
-            "name": recipe.name,
-            "ingredients": recipe.ingredients,
-            "instructions": recipe.instructions,
-            "time": recipe.time
-        }
-        recipe_json.append(new_recipe)
-    return json.dumps(recipe_json), 200
-
 @app.route('/data')
 def return_data():
     events = database.query_all(Event)
