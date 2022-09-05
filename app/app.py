@@ -100,7 +100,7 @@ def cal_display():
         database.add_instance(Event, fk_recipe=recipe_id, date=date)
         return render_template('full-calendar.html', recipes=recipes)
 
-@app.route('/add-recipe', methods=['POST'])
+@app.post('/add-recipe')
 def add_recipe():
     name = request.form['name']
     time = request.form['time']
@@ -138,7 +138,7 @@ def add_recipe():
     flash(f'Rezept {name} gespeichert.', 'positive')
     return redirect(url_for('display_index'))
 
-@app.route('/import-recipe', methods=['POST'])
+@app.post('/import-recipe')
 def import_recipe():
     link = request.form['link']
     icon = request.form['icon']
@@ -172,7 +172,7 @@ def import_recipe():
     flash(f'Rezept {name} gespeichert.', 'positive')
     return redirect(url_for('display_index'))
 
-@app.route("/edit-recipe",  methods = ['POST'])
+@app.post("/edit-recipe")
 def edit_recipe():
     recipe_id = int(request.form["id"])
     name = request.form['name']
@@ -208,7 +208,7 @@ def edit_recipe():
     flash(f'Rezept {name} gespeichert.', 'positive')
     return redirect(url_for('display_index'))
     
-@app.route("/delete-recipe", methods=['POST'])
+@app.post("/delete-recipe")
 def delete_recipe():
     recipe_id = request.form["id"]
 
@@ -223,7 +223,7 @@ def delete_recipe():
 
     return redirect(url_for('display_index'))
 
-@app.route("/modal-recipe", methods=['POST'])
+@app.post("/modal-recipe")
 def display_modal_recipe():
     recipe_date = request.form["recipe_date"]
     recipe_name = request.form["recipe_name"]
@@ -247,7 +247,7 @@ def recipe_image(recipe_id):
 def display_index():
     return render_template('recipe-index.html', recipes=database.query_all(Recipe))
 
-@app.route("/move-meal", methods=['POST'])
+@app.post("/move-meal")
 def move_meal():
     event_date = request.form["event_date"]
     event_name = request.form["event_name"]
@@ -262,7 +262,7 @@ def move_meal():
 
     return jsonify(success=True)
 
-@app.route('/remove-meal', methods=['POST'])
+@app.post('/remove-meal')
 def delete_meal_event():
     event_date = request.form['date_to_remove']
     event_name = request.form['dinner_to_remove']
@@ -297,7 +297,7 @@ def display_ingredients():
     
     return render_template('ingredients.html', ingredients_dict=helper_functs.make_shopping_list(ingredient_lists), start=start_date, end=end_date)
 
-@app.route("/export-todoist", methods = ['POST'])
+@app.post("/export-todoist")
 def export_todoist():
     """Export checked ingredients to configured todoist list.
     """
@@ -307,7 +307,7 @@ def export_todoist():
     flash(f'Zutaten nach Todoist Einkaufsliste exportiert: {ingedients_to_export}')
     return url_for('cal_display') # redirect happens in js handler
 
-@app.route('/week', methods=['GET'])
+@app.get('/week')
 def screenshot_week():
     """Generates a screenshot of the current week and returns it. 
     The resolution is 600x800 to be compatible with kindle onlinescreensaver.
