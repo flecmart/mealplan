@@ -9,3 +9,5 @@ updates:
     directory: "app" # Location of package manifests
     schedule:
       interval: "weekly"
+    ignore:
+      - dependency-name: "markupsafe" # flask using soft_unicode from markupsafe which was removed https://markupsafe.palletsprojects.com/en/2.1.x/changes/#version-2-1-0
