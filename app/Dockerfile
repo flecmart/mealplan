@@ -12,9 +12,7 @@ RUN apt-get update \
 # Install Unzip
 RUN apt-get install -yqq unzip
 # Download the Chrome Driver
-RUN wget -O /tmp/chromedriver.zip http://chromedriver.storage.googleapis.com/`
-curl -sS chromedriver.storage.googleapis.com/LATEST_RELEASE
-`/chromedriver_linux64.zip
+RUN wget -O /tmp/chromedriver.zip http://chromedriver.storage.googleapis.com/`curl -sS chromedriver.storage.googleapis.com/LATEST_RELEASE`/chromedriver_linux64.zip
 # Set display port as an environment variable
 ENV DISPLAY=:99
 # Unzip the Chrome Driver into /usr/local/bin directory
