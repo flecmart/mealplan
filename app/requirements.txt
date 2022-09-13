@@ -5,5 +5,5 @@ nltk==3.7
 selenium==4.4.3
 Pillow==9.2.0
 debugpy==1.6.3
-recipe-scrapers==14.13.0
+recipe-scrapers==14.14.0
 todoist-api-python==1.1.1
