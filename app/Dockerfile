@@ -5,7 +5,7 @@ ENV FLASK_APP=app.py
 ENV FLASK_RUN_HOST=0.0.0.0
 # Install chromium
 RUN apt-get update \
-&& apt-get install -y chromium-browser
+&& apt-get install -y chromium
 # Install Unzip
 RUN apt-get install -yqq unzip
 # Download the Chrome Driver
