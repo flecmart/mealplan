@@ -8,13 +8,40 @@
             <h1 id="username-recipe-index" class="col-md-8">Alle Rezepte: </h1>
             <a style="margin-top: 20px;" class="col-md-4" href="/full-calendar"><input  class="button5" type="button" name="button5" value="Kalender"/></a>
         </div>
-        <ul style="margin-top: 15px;">
+        <div>
+            <input id="searchRecipes" type="text" placeholder="Rezepte oder Zutaten suchen..." style="background-color:rgba(10, 10, 10, 0.678); margin-top: 5%; color: white; width:15em">
+        </div>
+        <ul id="recipeList" style="margin-top: 15px;">
             {% for recipe in recipes|sort(attribute='name') %}
-                <!-- <li><a href="{{ url_for('display_recipe', recipe_id=recipe.id) }}">{{ recipe.name }} : recipe {{ recipe.id }}</li> -->
-                <li><a href="{{ url_for('display_recipe', recipe_id=recipe.id) }}">{{ recipe.name }}</li>   
+                <li>
+                    <div>
+                        <a href="{{ url_for('display_recipe', recipe_id=recipe.id) }}">{{ recipe.name }}
+                        <div style="display:none;">{{recipe.ingredients}}</div>
+                    </div>
+                </li>   
             {% endfor %}
         </ul>
     </div>
 </div>
+
+<script>
+    
+
+    let input = document.getElementById('searchRecipes');
+    input.onkeyup = function () {
+        let filter = input.value.toUpperCase();
+        let ul = document.getElementById('recipeList');
+        let li = ul.getElementsByTagName('li');
+        for (let i = 0; i < li.length; i++) {
+            let content = li[i].innerHTML;
+            if (content.toUpperCase().includes(filter)) {
+                li[i].style.display = '';
+            }
+            else {
+                li[i].style.display = 'none';
+            }
+        }
+    }
+</script>
 
 {% endblock %}
