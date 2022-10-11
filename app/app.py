@@ -29,9 +29,6 @@ def get_todoist_project_id(api, name):
             return project.id
     return None
 
-todoist_api = TodoistAPI(os.environ['TODOIST_TOKEN'])
-shopping_list_id = get_todoist_project_id(todoist_api, os.environ['TODOIST_LIST'])
-
 app = create_app()
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif'])
 
@@ -287,6 +284,8 @@ def export_todoist():
     """Export checked ingredients to configured todoist list.
     """
     ingedients_to_export = request.form.getlist('export_ingredient')
+    todoist_api = TodoistAPI(os.environ['TODOIST_TOKEN'])
+    shopping_list_id = get_todoist_project_id(todoist_api, os.environ['TODOIST_LIST'])
     for entry in ingedients_to_export:
         todoist_api.add_task(content=entry, project_id=shopping_list_id)
     flash(f'Zutaten nach Todoist Einkaufsliste exportiert: {ingedients_to_export}')
