@@ -1,5 +1,5 @@
 flask==2.2.2
-flask-sqlalchemy==3.0.0
+flask-sqlalchemy==3.0.2
 psycopg2==2.9.4
 nltk==3.7
 selenium==4.5.0
