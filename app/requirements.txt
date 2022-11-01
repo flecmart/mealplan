@@ -1,6 +1,6 @@
 flask==2.2.2
 flask-sqlalchemy==3.0.2
-psycopg2==2.9.4
+psycopg2==2.9.5
 nltk==3.7
 selenium==4.5.0
 Pillow==9.2.0
