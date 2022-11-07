@@ -1,7 +1,12 @@
 import flask_sqlalchemy
 import re
 
-db = flask_sqlalchemy.SQLAlchemy()
+SQLALCHEMY_ENGINE_OPTIONS  = {
+    'pool_size': 10,
+    'pool_recycle': 60,
+    'pool_pre_ping': True
+}
+db = flask_sqlalchemy.SQLAlchemy(engine_options=SQLALCHEMY_ENGINE_OPTIONS)
 
 class Recipe(db.Model):
     id = db.Column(db.Integer, primary_key=True)
