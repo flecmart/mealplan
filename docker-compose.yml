@@ -26,5 +26,25 @@ services:
       database:
         condition: service_healthy
 
+  backups:
+    container_name: mealplan_backups
+    image: prodrigestivill/postgres-backup-local:13-alpine-af916da
+    restart: always
+    user: postgres:postgres
+    volumes:
+      - /var/opt/pgbackups:/backups
+    links:
+        - database
+    depends_on:
+        - database
+    env_file: environment.conf
+    environment:
+      - POSTGRES_EXTRA_OPTS=-Z9 --schema=public --blobs
+      - SCHEDULE=@daily
+      - BACKUP_KEEP_DAYS=7
+      - BACKUP_KEEP_WEEKS=4
+      - BACKUP_KEEP_MONTHS=6
+      - HEALTHCHECK_PORT=8080
+
 volumes:
   db_volume:
