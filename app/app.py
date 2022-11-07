@@ -287,7 +287,11 @@ def export_todoist():
     todoist_api = TodoistAPI(os.environ['TODOIST_TOKEN'])
     shopping_list_id = get_todoist_project_id(todoist_api, os.environ['TODOIST_LIST'])
     for entry in ingedients_to_export:
-        todoist_api.add_task(content=entry, project_id=shopping_list_id)
+        try:
+            todoist_api.add_task(content=entry, project_id=shopping_list_id)
+        except Exception as e:
+            print(f'could not add task {entry} to todoist: {e}')
+            flash(f'Fehler beim exportieren von {entry}!')
     flash(f'Zutaten nach Todoist Einkaufsliste exportiert: {ingedients_to_export}')
     return url_for('cal_display') # redirect happens in js handler
 
