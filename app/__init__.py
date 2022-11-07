@@ -1,8 +1,11 @@
 import os
 from flask import Flask
+import os.path
+import sys
+sys.path.append(os.path.dirname(__file__))
 
-from .models import db
-from . import config
+from models import db
+import config
 
 def create_app():
     app = Flask(__name__)
