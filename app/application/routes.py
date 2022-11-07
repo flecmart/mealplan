@@ -9,7 +9,7 @@ import time
 from datetime import datetime, timedelta
 from io import BytesIO
 from urllib.request import urlopen
-from flask import request, flash, render_template, jsonify, redirect
+from flask import current_app, request, flash, render_template, jsonify, redirect
 from sqlalchemy import and_
 from recipe_scrapers import scrape_me
 from todoist_api_python.api import TodoistAPI
@@ -29,7 +29,6 @@ def get_todoist_project_id(api, name):
             return project.id
     return None
 
-app = create_app()
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif'])
 
 def allowed_file(filename):
@@ -44,11 +43,11 @@ def bust_cache_url_for(endpoint, **values):
             values['q'] = int(os.stat(file_path).st_mtime)
     return url_for(endpoint, **values)
 
-@app.route("/")
+@current_app.route("/")
 def index():
     return render_template('full-calendar.html', recipes=database.query_all(Recipe))
 
-@app.route('/data')
+@current_app.route('/data')
 def return_data():
     events = database.query_all(Event)
     all_events = []
@@ -58,7 +57,7 @@ def return_data():
     
     return json.dumps(all_events, default=str)
 
-@app.route('/full-calendar', methods=['POST', 'GET'])
+@current_app.route('/full-calendar', methods=['POST', 'GET'])
 def cal_display():
     if request.method == 'GET':
         return render_template('full-calendar.html', recipes=database.query_all(Recipe))
@@ -82,7 +81,7 @@ def cal_display():
         database.add_instance(Event, fk_recipe=recipe_id, date=date)
         return render_template('full-calendar.html', recipes=recipes)
 
-@app.post('/add-recipe')
+@current_app.post('/add-recipe')
 def add_recipe():
     name = request.form['name']
     time = request.form['time']
@@ -120,7 +119,7 @@ def add_recipe():
     flash(f'Rezept {name} gespeichert.', 'positive')
     return redirect(url_for('display_index'))
 
-@app.post('/import-recipe')
+@current_app.post('/import-recipe')
 def import_recipe():
     link = request.form['link']
     icon = request.form['icon']
@@ -154,7 +153,7 @@ def import_recipe():
     flash(f'Rezept {name} gespeichert.', 'positive')
     return redirect(url_for('display_index'))
 
-@app.post("/edit-recipe")
+@current_app.post("/edit-recipe")
 def edit_recipe():
     recipe_id = int(request.form["id"])
     name = request.form['name']
@@ -190,7 +189,7 @@ def edit_recipe():
     flash(f'Rezept {name} gespeichert.', 'positive')
     return redirect(url_for('display_index'))
     
-@app.post("/delete-recipe")
+@current_app.post("/delete-recipe")
 def delete_recipe():
     recipe_id = request.form["id"]
 
@@ -205,7 +204,7 @@ def delete_recipe():
 
     return redirect(url_for('display_index'))
 
-@app.post("/modal-recipe")
+@current_app.post("/modal-recipe")
 def display_modal_recipe():
     recipe_date = request.form["recipe_date"]
     recipe_name = request.form["recipe_name"]
@@ -213,23 +212,23 @@ def display_modal_recipe():
 
     return render_template('recipe.html', recipe=recipe, instructions=recipe.get_instructions(), recipe_date=recipe_date, ingredients=recipe.get_ingredients_list())
 
-@app.route("/recipe/<recipe_id>")
+@current_app.route("/recipe/<recipe_id>")
 def display_recipe(recipe_id):
     recipe = Recipe.query.filter_by(id=recipe_id).first()
     button_flag = True
     
     return render_template('recipe.html', recipe=recipe, instructions=recipe.get_instructions(), button_flag=button_flag, ingredients=recipe.get_ingredients_list())
 
-@app.route('/recipe/<recipe_id>/img')
+@current_app.route('/recipe/<recipe_id>/img')
 def recipe_image(recipe_id):
     recipe = Recipe.query.filter_by(id=recipe_id).first()
     return app.response_class(recipe.image, mimetype='application/octet-stream')
 
-@app.route("/recipe-index")
+@current_app.route("/recipe-index")
 def display_index():
     return render_template('recipe-index.html', recipes=database.query_all(Recipe))
 
-@app.post("/move-meal")
+@current_app.post("/move-meal")
 def move_meal():
     event_date = request.form["event_date"]
     event_name = request.form["event_name"]
@@ -244,7 +243,7 @@ def move_meal():
 
     return jsonify(success=True)
 
-@app.post('/remove-meal')
+@current_app.post('/remove-meal')
 def delete_meal_event():
     event_date = request.form['date_to_remove']
     event_name = request.form['dinner_to_remove']
@@ -255,7 +254,7 @@ def delete_meal_event():
 
     return redirect(url_for('cal_display'))
 
-@app.route("/ingredients")
+@current_app.route("/ingredients")
 def display_ingredients():
     """
     Diplays a list of ingredients for recipes of all events for the current week
@@ -279,7 +278,7 @@ def display_ingredients():
     
     return render_template('ingredients.html', ingredients_dict=helper_functs.make_shopping_list(ingredient_lists), start=start_date, end=end_date)
 
-@app.post("/export-todoist")
+@current_app.post("/export-todoist")
 def export_todoist():
     """Export checked ingredients to configured todoist list.
     """
@@ -295,7 +294,7 @@ def export_todoist():
     flash(f'Zutaten nach Todoist Einkaufsliste exportiert: {ingedients_to_export}')
     return url_for('cal_display') # redirect happens in js handler
 
-@app.get('/week')
+@current_app.get('/week')
 def screenshot_week():
     """Generates a screenshot of the current week and returns it. 
     The resolution is 600x800 to be compatible with kindle onlinescreensaver.
@@ -323,7 +322,7 @@ def screenshot_week():
     driver.quit()
     return redirect(bust_cache_url_for('static', filename='week.png'))
 
-@app.route("/purge")
+@current_app.route("/purge")
 def purge_events():
     """
     Purge old events from calender.

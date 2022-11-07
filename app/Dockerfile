@@ -13,4 +13,4 @@ RUN pip install --no-cache-dir --upgrade pip \
 RUN python -c "import nltk; nltk.download('punkt'); nltk.download('averaged_perceptron_tagger')"
 EXPOSE 5000
 COPY . .
-CMD ["flask", "run"]
+CMD ["python", "wsgi.py"]
