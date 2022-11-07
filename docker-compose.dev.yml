@@ -17,7 +17,8 @@ services:
 
   app:
     container_name: mealplan
-    build: app
+    build: 
+      context: app
     restart: always
     env_file: environment.conf
     ports:

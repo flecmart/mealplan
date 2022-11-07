@@ -17,13 +17,11 @@ services:
 
   app:
     container_name: mealplan
-    build: app
-    #image: ghcr.io/flecmart/mealplan
+    image: ghcr.io/flecmart/mealplan
     restart: always
     env_file: environment.conf
     ports:
       - 5000:5000
-      - 10001:10001 # debugging
     depends_on:
       database:
         condition: service_healthy
