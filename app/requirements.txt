@@ -6,4 +6,4 @@ selenium==4.5.0
 Pillow==9.3.0
 debugpy==1.6.3
 recipe-scrapers==14.23.0
-todoist-api-python==2.0.1
+todoist-api-python==2.0.2
