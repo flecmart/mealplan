@@ -19,6 +19,7 @@ services:
     container_name: mealplan
     build: 
       context: app
+      dockerfile: Dockerfile.dev
     restart: always
     env_file: environment.conf
     ports:
