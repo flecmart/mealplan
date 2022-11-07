@@ -18,7 +18,6 @@ from selenium.webdriver.chrome.options import Options
 from PIL import Image
 from collections import defaultdict
 
-from . import create_app
 from . import database
 from . import helper_functs
 from .models import db, Recipe, Event
@@ -38,7 +37,7 @@ def bust_cache_url_for(endpoint, **values):
     if endpoint == 'static':
         filename = values.get('filename', None)
         if filename:
-            file_path = os.path.join(app.root_path,
+            file_path = os.path.join(current_app.root_path,
                                      endpoint, filename)
             values['q'] = int(os.stat(file_path).st_mtime)
     return url_for(endpoint, **values)
@@ -222,7 +221,7 @@ def display_recipe(recipe_id):
 @current_app.route('/recipe/<recipe_id>/img')
 def recipe_image(recipe_id):
     recipe = Recipe.query.filter_by(id=recipe_id).first()
-    return app.response_class(recipe.image, mimetype='application/octet-stream')
+    return current_app.response_class(recipe.image, mimetype='application/octet-stream')
 
 @current_app.route("/recipe-index")
 def display_index():
