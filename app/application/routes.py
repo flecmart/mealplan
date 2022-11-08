@@ -1,6 +1,4 @@
 from flask.helpers import url_for
-from .debugger import initialize_flask_server_debugger_if_needed
-initialize_flask_server_debugger_if_needed()
 
 import os
 import json
