@@ -34,18 +34,10 @@
 			// Add the IDs of extensions you want installed when the container is created.
 			"extensions": [
 				"eamodio.gitlens",
-				"formulahendry.auto-close-tag",
 				"formulahendry.auto-complete-tag",
-				"formulahendry.auto-rename-tag",
 				"mhutchie.git-graph",
-				"ms-python.isort",
 				"ms-python.python",
 				"ms-python.vscode-pylance",
-				"ms-toolsai.jupyter",
-				"ms-toolsai.jupyter-keymap",
-				"ms-toolsai.jupyter-renderers",
-				"ms-toolsai.vscode-jupyter-cell-tags",
-				"ms-toolsai.vscode-jupyter-slideshow",
 				"njpwerner.autodocstring",
 				"VisualStudioExptTeam.intellicode-api-usage-examples",
 				"VisualStudioExptTeam.vscodeintellicode"
