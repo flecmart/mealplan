@@ -13,13 +13,15 @@ Dependencies:
 - [docker & docker-compose](https://www.docker.com/get-started)  
 - [GNU make](https://chocolatey.org/packages/make) (for debugging on a windows machine)
 
-Clone the repository:
+1. Clone the repository:
 
 ```
 git clone https://github.com/flecmart/mealplan.git
 ```
 
-Build and run with docker compose:
+2. Create your `environment.conf` from `environment.conf.example`
+
+3. Build and run with docker compose:
 
 ```
 cd mealplan
@@ -62,15 +64,6 @@ Monthly View:
 - time range for shopping list selectable in UI
 - mealplan tries to aggregate ingredients with natural language processing
 - shopping list or certain ingredients can then be exported to [todoist](https://todoist.com/) and are therefore synced on your mobile device for the actual shopping
-
-## Debugging
-
-To debug the app inside the container I used the great debug approach of [Adrien Cacciaguerra](https://blog.theodo.com/2020/05/debug-flask-vscode/). 
-
-To debug the app:
-
-1. run `make flaskdebug`
-2. Press F5 to attach vscode
 
 ## Recreate DB
 
