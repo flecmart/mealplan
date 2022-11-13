@@ -3,7 +3,7 @@ services:
   database:
     container_name: mealplan_db
     image: postgres:13
-    restart: always
+    restart: "no"
     env_file: environment.conf
     ports:
       - 5432:5432
@@ -20,7 +20,7 @@ services:
     build: 
       context: app
       dockerfile: Dockerfile.dev
-    restart: always
+    restart: "no"
     env_file: environment.conf
     ports:
       - 5000:5000
