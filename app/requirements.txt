@@ -4,6 +4,6 @@ psycopg2==2.9.5
 nltk==3.7
 selenium==4.7.2
 Pillow==9.3.0
-recipe-scrapers==14.24.0
+recipe-scrapers==14.25.0
 todoist-api-python==2.0.2
 waitress==2.1.2
