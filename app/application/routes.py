@@ -10,6 +10,7 @@ from urllib.request import urlopen
 from flask import current_app, request, flash, render_template, jsonify, redirect
 from sqlalchemy import and_
 from recipe_scrapers import scrape_me
+from recipe_scrapers._exceptions import SchemaOrgException
 from todoist_api_python.api import TodoistAPI
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -125,7 +126,10 @@ def import_recipe():
     scraper = scrape_me(link)
 
     name = f'{scraper.title()} - {scraper.yields()}'
-    time = scraper.total_time()
+    try:
+        time = scraper.total_time()
+    except SchemaOrgException:
+        time = 30 # use default 30 mins
     ingredients = ';'.join(scraper.ingredients())
     instructions = scraper.instructions()
 
