@@ -37,16 +37,16 @@ class Recipe(db.Model):
         instructions = re.sub('<.*?>', '', instructions)
 
         # splits string at "." and ignore abbreviations
-        instructions = re.split(r'(?<!ca)(?<!evtl)(?<!bzw)(?<!ggf)(?<!z)(?<!B)(?<!inkl)\.', instructions, flags=re.IGNORECASE)
+        instructions = re.split(r'(?<!ca)(?<!evtl)(?<!bzw)(?<!ggf)(?<!z)(?<!B)(?<!inkl)(?<!min)(?<!st)(?<!sek)(?<!gek)(?<!gr)(?<!g)(?<!kg)\.', instructions, flags=re.IGNORECASE)
 
         # handles cases where parentheses exist in instructions
         fresh_instructions = []
         for step in instructions:
             step = step.replace('(', '').replace(')', '').replace('!', '')
-            fresh_instructions.append(step)  
+            fresh_instructions.append(step.strip())  
 
         # removes empty strings in list
-        fresh_instructions = list(filter(None, fresh_instructions))
+        fresh_instructions = list(filter(lambda x: x not in ['', '/n'], fresh_instructions))
 
         return fresh_instructions
 
