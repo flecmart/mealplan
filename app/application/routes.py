@@ -7,7 +7,7 @@ import time
 from datetime import datetime, timedelta
 from io import BytesIO
 from urllib.request import urlopen
-from flask import current_app, request, flash, render_template, jsonify, redirect
+from flask import current_app, request, flash, render_template, jsonify, redirect, session
 from sqlalchemy import and_
 from recipe_scrapers import scrape_me
 from recipe_scrapers._exceptions import SchemaOrgException
@@ -16,6 +16,7 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from PIL import Image
 from collections import defaultdict
+from dataclasses import dataclass
 
 from . import database
 from . import helper_functs
@@ -26,6 +27,15 @@ def get_todoist_project_id(api, name):
         if project.name == name:
             return project.id
     return None
+
+@dataclass
+class RecipeCache:
+    name: str
+    time: int
+    ingredients: str
+    instructions: str
+    icon: str
+    image_url: str
 
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif'])
 
@@ -121,38 +131,109 @@ def add_recipe():
 def import_recipe():
     link = request.form['link']
     icon = request.form['icon']
-    image = request.files['image']
-
-    scraper = scrape_me(link)
-
-    name = f'{scraper.title()} - {scraper.yields()}'
+    
     try:
-        time = scraper.total_time()
-    except SchemaOrgException:
-        time = 30 # use default 30 mins
-    ingredients = ';'.join(scraper.ingredients())
-    instructions = scraper.instructions()
+        # scrape with recipe_scraper
+        recipe = scrape_recipe(link, icon)
+        if recipe == None:
+            return redirect(url_for('cal_display'))
+        
+        database.add_instance(Recipe,
+                              name=recipe.name,
+                              ingredients=str(recipe.ingredients),
+                              instructions=recipe.instructions,
+                              time=int(recipe.time),
+                              icon=recipe.icon, 
+                              image=BytesIO(urlopen(recipe.image_url).read()).read())
+        flash(f'Rezept {recipe.name} gespeichert.', 'positive')
+    except Exception as ex:
+        try:
+            # try generic scraping for schema
+            recipe = scrape_generic_recipe(link, icon)
+            if recipe == None:
+                return redirect(url_for('cal_display'))
+            if recipe.instructions == '':
+                 # handle cookidoo recipes that hide instrutions behind a paywall
+                 # cache the scraped info and ask for instructions in an additional modal
+                 # instrutions can be copy / pasted from browser with logged in cookidoo account to dump these recipes for the future
+                session['import_recipe_cache'] = recipe
+                return render_template('full-calendar.html', recipes=database.query_all(Recipe), import_additional_instructions="True")
+        except Exception as ex:
+            flash(f'Exception during import: {ex}')
+    
+    return redirect(url_for('display_index'))
 
-    same_recipe = Recipe.query.filter_by(name=name).first()
+def scrape_recipe(link, icon):
+    recipe = RecipeCache(None, None, None, None, None, None)
+    scraper = scrape_me(link)
+    
+    recipe.name = scraper.title()
+    try:
+        recipe.time = scraper.total_time()
+    except SchemaOrgException:
+        recipe.time = 30 # use default 30 mins
+    recipe.ingredients = ';'.join(scraper.ingredients())
+    recipe.instructions = scraper.instructions()
+
+    same_recipe = Recipe.query.filter_by(name=recipe.name).first()
     if same_recipe:
-        flash(f'Das Rezept {name} existiert bereits.', 'negative')
-        return redirect(url_for('cal_display'))
+        flash(f'Das Rezept {recipe.name} existiert bereits.', 'negative')
+        return None
 
     if icon == '':
-        icon = 'defaultIcon.png'
-
-    # if user does not select file, browser also submit an empty part without filename
-    if image.filename == '':
-        image_stream = BytesIO(urlopen(scraper.image()).read())
-        database.add_instance(Recipe, name=name, ingredients=str(ingredients), instructions=instructions, time=int(time), icon=icon, image=image_stream.read())
-    elif not allowed_file(image.filename):
-        flash(f'Nur folgende Dateiformate für Bilder erlaubt: {ALLOWED_EXTENSIONS}.', 'negative')
-        return redirect(url_for('cal_display'))
+        recipe.icon = 'defaultIcon.png'
     else:
-        database.add_instance(Recipe, name=name, ingredients=str(ingredients), instructions=instructions, time=int(time), icon=icon, image=image.read())
-        
-    flash(f'Rezept {name} gespeichert.', 'positive')
-    return redirect(url_for('display_index'))
+        recipe.icon = icon
+
+    recipe.image_url = scraper.image()
+
+    return recipe    
+
+def scrape_generic_recipe(link, icon):
+    recipe = RecipeCache(None, None, None, None, None, None)
+    scraper = scrape_me(link, wild_mode=True)
+    
+    recipe.name = scraper.title()
+    try:
+        recipe.time = scraper.total_time()
+    except SchemaOrgException:
+        recipe.time = 30 # use default 30 mins
+    recipe.ingredients = ';'.join(scraper.ingredients())
+    recipe.instructions = scraper.instructions()
+
+    same_recipe = Recipe.query.filter_by(name=recipe.name).first()
+    if same_recipe:
+        flash(f'Das Rezept {recipe.name} existiert bereits.', 'negative')
+        return None
+
+    if icon == '':
+        recipe.icon = 'defaultIcon.png'
+    else:
+        recipe.icon = icon
+
+    recipe.image_url = scraper.image()
+    
+    return recipe    
+
+@current_app.post('/import-cookidoo-instructions')
+def import_cookidoo_instructions():
+    instructions = request.form['instructions']
+    recipe = session.get('import_recipe_cache')
+    if recipe != None:
+        recipe['instructions'] = instructions.replace('\ue003', '<-LINKSLAUF')
+        database.add_instance(Recipe,
+                              name=recipe['name'],
+                              ingredients=str(recipe['ingredients']),
+                              instructions=recipe['instructions'],
+                              time=int(recipe['time']),
+                              icon=recipe['icon'], 
+                              image=BytesIO(urlopen(recipe['image_url']).read()).read())
+        session['import_recipe_cache'] = None # reset cache
+        flash(f'Rezept {recipe["name"]} gespeichert.', 'positive')
+        return redirect(url_for('display_index'))
+    else:
+        flash(f'Rezept {recipe["name"]} konnte nicht gespeichert werden.', 'negative')
+    return redirect(url_for('cal_display'))
 
 @current_app.post("/edit-recipe")
 def edit_recipe():
