@@ -239,7 +239,7 @@ def replace_thermomix_symbols(instructions):
     # vorwerk uses private unicode char space -> replace them with standard stuff https://unicode-table.com/de/1F963/
     # \ue003 is "Linkslauf"
     # \ue002 is "Rührstufe"
-    return instructions.replace('\ue003', '\u27f2').replace('\ue002', '\U0001F963 (Rühren)')
+    return instructions.replace('\ue003', '\u27f2').replace('\ue002', '\U0001F963')
 
 @current_app.post("/edit-recipe")
 def edit_recipe():
