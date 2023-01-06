@@ -220,7 +220,7 @@ def import_cookidoo_instructions():
     instructions = request.form['instructions']
     recipe = session.get('import_recipe_cache')
     if recipe != None:
-        recipe['instructions'] = instructions.replace('\ue003', '<-LINKSLAUF')
+        recipe['instructions'] = replace_thermomix_symbols(instructions)
         database.add_instance(Recipe,
                               name=recipe['name'],
                               ingredients=str(recipe['ingredients']),
@@ -234,6 +234,12 @@ def import_cookidoo_instructions():
     else:
         flash(f'Rezept {recipe["name"]} konnte nicht gespeichert werden.', 'negative')
     return redirect(url_for('cal_display'))
+
+def replace_thermomix_symbols(instructions):
+    # vorwerk uses private unicode char space -> replace them with standard stuff https://unicode-table.com/de/1F963/
+    # \ue003 is "Linkslauf"
+    # \ue002 is "Rührstufe"
+    return instructions.replace('\ue003', '\u27f2').replace('\ue002', '\U0001F963 (Rühren)')
 
 @current_app.post("/edit-recipe")
 def edit_recipe():
