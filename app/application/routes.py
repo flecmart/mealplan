@@ -18,9 +18,9 @@ from PIL import Image
 from collections import defaultdict
 from dataclasses import dataclass
 
-from . import database
-from . import helper_functs
-from .models import db, Recipe, Event
+from application import database
+from application import helper_functs
+from application.models import db, Recipe, Event
 
 def get_todoist_project_id(api, name):
     for project in api.get_projects():
@@ -239,7 +239,7 @@ def replace_thermomix_symbols(instructions):
     # vorwerk uses private unicode char space -> replace them with standard stuff https://unicode-table.com/de/1F963/
     # \ue003 is "Linkslauf"
     # \ue002 is "Rührstufe"
-    return instructions.replace('\ue003', '\u27f2').replace('\ue002', '\U0001F963').replace('\ue01e', '\u2707')
+    return instructions.replace('\ue01e', '\u2707').replace('\ue002', '\U0001F963').replace('\ue003', '\u27f2').replace('\ue026', '\u2668')
 
 @current_app.post("/edit-recipe")
 def edit_recipe():

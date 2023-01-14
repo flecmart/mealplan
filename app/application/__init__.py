@@ -1,8 +1,8 @@
 import os
 from flask import Flask
 
-from .models import db
-from . import config
+from application.models import db
+from application import config
 
 def create_app():
     app = Flask(__name__)
@@ -12,7 +12,7 @@ def create_app():
     db.init_app(app)
     
     with app.app_context():
-        from . import routes
+        from application import routes
         db.create_all()
     
     return app
