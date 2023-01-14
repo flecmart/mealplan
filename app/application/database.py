@@ -1,4 +1,4 @@
-from .models import db
+from application.models import db
 
 def query_all(model):
     data = model.query.all()

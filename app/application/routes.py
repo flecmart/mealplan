@@ -18,9 +18,9 @@ from PIL import Image
 from collections import defaultdict
 from dataclasses import dataclass
 
-from . import database
-from . import helper_functs
-from .models import db, Recipe, Event
+from application import database
+from application import helper_functs
+from application.models import db, Recipe, Event
 
 def get_todoist_project_id(api, name):
     for project in api.get_projects():
