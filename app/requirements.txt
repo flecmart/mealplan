@@ -2,7 +2,7 @@ flask==2.2.2
 flask-sqlalchemy==3.0.2
 psycopg2==2.9.5
 nltk==3.8.1
-selenium==4.7.2
+selenium==4.8.0
 Pillow==9.4.0
 recipe-scrapers==14.28.0
 todoist-api-python==2.0.2
