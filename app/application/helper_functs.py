@@ -8,7 +8,7 @@ from fractions import Fraction
 
 list_of_measures = ['Pck', 'Packung', 'TL', 'EL', 'Esslöffel', 'Teelöffel', 'liter', 'l' 'can', 'cup', 'cups', 'pint', 'quart', 'tablespoons', 'tablespoon', 'tbs', 'tb', 't', 'ts', 
                     'teaspoon', 'tsps', 'gr', 'grams', 'gram', 'g' ,'kilo', 'kilogram', 'kg', 'dash', 'pinch', 'sprig', 'oz', 'ounce', 'ounces', 'cloves', 'lb', 'pound', 'pd', 'ml',
-                    'milliliter']
+                    'milliliter', 'Bund']
 
 words_not_recognized_as_nouns = ['flour', 'olive', 'oz', 'Lauch', 'Couscous', 'Kreuzkümmelpulver']
 
@@ -172,6 +172,7 @@ def remove_amts_measures(string_x):
     
     try:
         noun_list.remove(measure_to_remove)
+        noun_list = [item for item in noun_list if item not in ['¼', '¾', '½']]
     except ValueError:
         # no measure to remove
         pass
