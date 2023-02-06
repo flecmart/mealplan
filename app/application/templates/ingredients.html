@@ -23,12 +23,14 @@
         {% endfor %}
         <div style="text-align:center; margin-top: 5px;">
             <div class="row">
+                <button class="btn btn-default" onclick="toggleHideCommonIngredients();return false;">(Un)hide common</button>
                 <button class="btn btn-default" onclick="toggleAllCheckboxes();return false;">(De)select all</button>
                 <button id="submit-post-form" type="submit" class="btn btn-default">Todoist</button>
             </div>
         </div>
     </ul>
     </form>
+</div>
 </div>
 
 <script>
@@ -39,8 +41,10 @@
     function toggleAllCheckboxes() {
         let checkboxes = document.getElementsByName('export_ingredient');
         for (let i = 0; i < checkboxes.length; i++) {
-            checkboxes[i].checked = !checkboxes[i].checked;
-        }
+            if (!checkboxes[i].parentElement.style.display) {
+                checkboxes[i].checked = !checkboxes[i].checked;
+            }
+    }
     }
 
     // submit hanlder
@@ -75,6 +79,30 @@
         e.preventDefault();
         return false;
     }
+
+    let hideCommon = true
+    const ingredientsToHide = ["Wasser", "Salz", "Pfeffer"];
+
+    function toggleHideCommonIngredients() {
+    $("#ingred-list li").each(function() {
+      const ingredient = $(this).text();
+      let shouldHide = false;
+      ingredientsToHide.forEach(function(hide) {
+        if (ingredient.includes(hide)) {
+            shouldHide = true
+        }
+      });
+      if (shouldHide && hideCommon) {
+        $(this).hide();
+      }
+      else {
+        $(this).show();
+      }
+    });
+    hideCommon = !hideCommon;
+  }
+  toggleHideCommonIngredients();
+  
 </script>
 
 {% endblock %}
