@@ -187,10 +187,11 @@ def remove_amts_measures(string_x):
     
     try:
         noun_list.remove(measure_to_remove)
-        noun_list = [item for item in noun_list if item not in ['¼', '¾', '½']]
     except ValueError:
         # no measure to remove
         pass
+    finally:
+        noun_list = [item for item in noun_list if item not in ['¼', '¾', '½']]
     return noun_list
 
 def remove_german_recipe_plural(string_ingredient):
