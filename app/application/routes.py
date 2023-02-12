@@ -9,14 +9,11 @@ from io import BytesIO
 from urllib.request import urlopen
 from flask import current_app, request, flash, render_template, jsonify, redirect, session
 from sqlalchemy import and_
-from recipe_scrapers import scrape_me
-from recipe_scrapers._exceptions import SchemaOrgException
 from todoist_api_python.api import TodoistAPI
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from PIL import Image
 from collections import defaultdict
-from dataclasses import dataclass
 
 from application import database
 from application import helper_functs
@@ -27,15 +24,6 @@ def get_todoist_project_id(api, name):
         if project.name == name:
             return project.id
     return None
-
-@dataclass
-class RecipeCache:
-    name: str
-    time: int
-    ingredients: str
-    instructions: str
-    icon: str
-    image_url: str
 
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif'])
 
@@ -134,7 +122,7 @@ def import_recipe():
     
     try:
         # scrape with recipe_scraper
-        recipe = scrape_recipe(link, icon)
+        recipe = helper_functs.scrape_recipe(link, icon)
         if recipe == None:
             return redirect(url_for('cal_display'))
         
@@ -149,7 +137,7 @@ def import_recipe():
     except Exception as ex:
         try:
             # try generic scraping for schema
-            recipe = scrape_generic_recipe(link, icon)
+            recipe = helper_functs.scrape_generic_recipe(link, icon)
             if recipe == None:
                 return redirect(url_for('cal_display'))
             if recipe.instructions == '':
@@ -162,58 +150,7 @@ def import_recipe():
             flash(f'Exception during import: {ex}')
     
     return redirect(url_for('display_index'))
-
-def scrape_recipe(link, icon):
-    recipe = RecipeCache(None, None, None, None, None, None)
-    scraper = scrape_me(link)
-    
-    recipe.name = scraper.title()
-    try:
-        recipe.time = scraper.total_time()
-    except SchemaOrgException:
-        recipe.time = 30 # use default 30 mins
-    recipe.ingredients = ';'.join(scraper.ingredients())
-    recipe.instructions = scraper.instructions()
-
-    same_recipe = Recipe.query.filter_by(name=recipe.name).first()
-    if same_recipe:
-        flash(f'Das Rezept {recipe.name} existiert bereits.', 'negative')
-        return None
-
-    if icon == '':
-        recipe.icon = 'defaultIcon.png'
-    else:
-        recipe.icon = icon
-
-    recipe.image_url = scraper.image()
-
-    return recipe    
-
-def scrape_generic_recipe(link, icon):
-    recipe = RecipeCache(None, None, None, None, None, None)
-    scraper = scrape_me(link, wild_mode=True)
-    
-    recipe.name = scraper.title()
-    try:
-        recipe.time = scraper.total_time()
-    except SchemaOrgException:
-        recipe.time = 30 # use default 30 mins
-    recipe.ingredients = ';'.join(scraper.ingredients())
-    recipe.instructions = scraper.instructions()
-
-    same_recipe = Recipe.query.filter_by(name=recipe.name).first()
-    if same_recipe:
-        flash(f'Das Rezept {recipe.name} existiert bereits.', 'negative')
-        return None
-
-    if icon == '':
-        recipe.icon = 'defaultIcon.png'
-    else:
-        recipe.icon = icon
-
-    recipe.image_url = scraper.image()
-    
-    return recipe    
+                 
 
 @current_app.post('/import-cookidoo-instructions')
 def import_cookidoo_instructions():
