@@ -189,3 +189,14 @@ def remove_german_recipe_plural(string_ingredient):
         else:
             stripped_words.append(word)
     return (' ').join(stripped_words)
+def prepare_ingredients(instructions):
+    '''prepare instructions for better german natural language processing'''
+    result = []
+    for line in instructions:
+        result.append(line
+                        .replace('Möhren', 'Karotte(n)')
+                        .replace('Karotten', 'Karotte(n)')
+                        .replace('Knoblauchzehen', 'Knoblauchzehe(n)')
+                        .replace('artoffeln', 'artoffel(n)')
+                        .replace ('wiebeln','wiebel(n)'))
+    return result
