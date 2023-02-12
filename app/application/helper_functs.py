@@ -6,13 +6,28 @@ import re
 from flask import flash
 from fractions import Fraction
 
+from recipe_scrapers import scrape_me
+from recipe_scrapers._exceptions import SchemaOrgException
+from dataclasses import dataclass
+from application.models import Recipe
+
 list_of_measures = ['Pck', 'Packung', 'TL', 'EL', 'Esslöffel', 'Teelöffel', 'liter', 'l' 'can', 'cup', 'cups', 'pint', 'quart', 'tablespoons', 'tablespoon', 'tbs', 'tb', 't', 'ts', 
                     'teaspoon', 'tsps', 'gr', 'grams', 'gram', 'g' ,'kilo', 'kilogram', 'kg', 'dash', 'pinch', 'sprig', 'oz', 'ounce', 'ounces', 'cloves', 'lb', 'pound', 'pd', 'ml',
-                    'milliliter', 'Bund']
+                    'milliliter', 'Bund', 'Zweig']
 
 words_not_recognized_as_nouns = ['flour', 'olive', 'oz', 'Lauch', 'Couscous', 'Kreuzkümmelpulver']
 
 list_of_pos = ['NN', 'NNP', 'NNS', 'NNPS']
+
+@dataclass
+class RecipeCache:
+    name: str
+    time: int
+    ingredients: str
+    instructions: str
+    icon: str
+    image_url: str
+
 
 def get_today_string():
     return "{date:%d.%m}".format(date=datetime.datetime.now())
@@ -189,3 +204,67 @@ def remove_german_recipe_plural(string_ingredient):
         else:
             stripped_words.append(word)
     return (' ').join(stripped_words)
+
+def prepare_ingredients(instructions):
+    '''prepare instructions for better german natural language processing'''
+    result = []
+    for line in instructions:
+        result.append(line
+                        .replace('Möhren', 'Karotte(n)')
+                        .replace('Karotten', 'Karotte(n)')
+                        .replace('Knoblauchzehen', 'Knoblauchzehe(n)')
+                        .replace('artoffeln', 'artoffel(n)')
+                        .replace ('wiebeln','wiebel(n)'))
+    return result
+        
+def scrape_recipe(link, icon):
+    recipe = RecipeCache(None, None, None, None, None, None)
+    scraper = scrape_me(link)
+    
+    recipe.name = scraper.title()
+    try:
+        recipe.time = scraper.total_time()
+    except SchemaOrgException:
+        recipe.time = 30 # use default 30 mins
+    recipe.ingredients = ';'.join(prepare_ingredients(scraper.ingredients()))
+    recipe.instructions = scraper.instructions()
+
+    same_recipe = Recipe.query.filter_by(name=recipe.name).first()
+    if same_recipe:
+        flash(f'Das Rezept {recipe.name} existiert bereits.', 'negative')
+        return None
+
+    if icon == '':
+        recipe.icon = 'defaultIcon.png'
+    else:
+        recipe.icon = icon
+
+    recipe.image_url = scraper.image()
+
+    return recipe    
+
+def scrape_generic_recipe(link, icon):
+    recipe = RecipeCache(None, None, None, None, None, None)
+    scraper = scrape_me(link, wild_mode=True)
+    
+    recipe.name = scraper.title()
+    try:
+        recipe.time = scraper.total_time()
+    except SchemaOrgException:
+        recipe.time = 30 # use default 30 mins
+    recipe.ingredients = ';'.join(prepare_ingredients(scraper.ingredients()))
+    recipe.instructions = scraper.instructions()
+    
+    same_recipe = Recipe.query.filter_by(name=recipe.name).first()
+    if same_recipe:
+        flash(f'Das Rezept {recipe.name} existiert bereits.', 'negative')
+        return None
+
+    if icon == '':
+        recipe.icon = 'defaultIcon.png'
+    else:
+        recipe.icon = icon
+
+    recipe.image_url = scraper.image()
+    
+    return recipe    
