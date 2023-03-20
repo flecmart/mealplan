@@ -137,20 +137,21 @@ def make_ingredient_dict(recipe, list_of_ingredients):
                 k_list.remove(measurement)
             except:
                 pass
-        k_name = ' '.join(k_list)
-        key_name = k_name.title() # thus parmesan == Parmesan == PARMESAN
+        name_key = ' '.join(k_list).title()
+        measurement_key = f'__{measurement}' if measurement else ''
+        key = f'{name_key}{measurement_key}' 
         # in the case of say water or salt and pepper
-        if amt == None:# and measurement == "whole":
+        if amt == None: # and measurement == "whole":
             amt = 1
         
-        if key_name in ingredient_dict:
+        if key in ingredient_dict:
             try:
                 # add amount
-                ingredient_dict[key_name][0] += amt
+                ingredient_dict[key][0] += amt
             except TypeError:
-                flash(f'Could nto add amount "{amt}" to "{ingredient_dict[key_name]}"!')
+                flash(f'Could nto add amount "{amt}" to "{ingredient_dict[key]}"!')
         else:
-            ingredient_dict[key_name] = [amt, measurement, recipe]
+            ingredient_dict[key] = [amt, measurement, name_key, recipe]
 
     return ingredient_dict
 
@@ -165,7 +166,7 @@ def make_shopping_list(defaultdict_of_lists_of_ingredients):
                     # add amount
                     big_dict_of_ingredients[item][0] += ingred_dict[item][0]
                     # add recipe reference
-                    big_dict_of_ingredients[item][2] += ' & ' + ingred_dict[item][2]
+                    big_dict_of_ingredients[item][3] += ' & ' + ingred_dict[item][3]
                 except TypeError:
                     flash(f'Could not add amount "{ingred_dict[item][0]}" to "{big_dict_of_ingredients[item]}"!')
             else:
