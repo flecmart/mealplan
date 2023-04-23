@@ -30,7 +30,6 @@ services:
     container_name: mealplan_backups
     image: prodrigestivill/postgres-backup-local:13-alpine-af916da
     restart: always
-    user: postgres:postgres
     volumes:
       - /var/opt/pgbackups:/backups
     links:

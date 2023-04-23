@@ -77,10 +77,6 @@ Then restart the app.
 
 Backup: https://github.com/prodrigestivill/docker-postgres-backup-local
 
-In case of running as postgres user, the system administrator must initialize the permission of the destination folder as follows:
-
-`sudo mkdir -p /var/opt/pgbackups && sudo chown -R 999:999 /var/opt/pgbackups`
-
 Restore:
 
 Replace the backupfile name, `$CONTAINER`, `$USERNAME` and `$DBNAME` from the following command:
