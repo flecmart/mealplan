@@ -216,6 +216,7 @@ def prepare_ingredients(instructions):
                         .replace('Karotten', 'Karotte(n)')
                         .replace('Knoblauchzehen', 'Knoblauchzehe(n)')
                         .replace('artoffeln', 'artoffel(n)')
+                        .replace('Schalotten', 'Schalotte(n)')
                         .replace ('wiebeln','wiebel(n)'))
     return result
         
