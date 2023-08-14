@@ -5,5 +5,5 @@ nltk==3.8.1
 selenium==4.11.2
 Pillow==10.0.0
 recipe-scrapers==14.42.0
-todoist-api-python==2.0.2
+todoist-api-python==2.1.2
 waitress==2.1.2
