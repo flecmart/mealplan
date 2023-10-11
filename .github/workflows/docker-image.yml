@@ -7,15 +7,26 @@ on:
   pull_request:
     branches:
       - 'main'
+  workflow_dispatch:
 
 # permissions are needed if pushing to ghcr.io
 permissions: 
   packages: write
 
 jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Build the Docker image
+        run: |
+          cd app
+          docker build . --file Dockerfile --tag my-image-name:$(date +%s):
+    
 
   build:
-
+    needs: test
     runs-on: ubuntu-latest
 
     steps:
@@ -59,18 +70,3 @@ jobs:
         push: ${{ github.event_name != 'pull_request' }}
         tags: ${{ steps.metadata.outputs.tags }}
         labels: ${{ steps.metadata.outputs.labels }}
-
-  cleanup:
-    needs: build
-
-    runs-on: ubuntu-latest
-
-    steps:
-    - name: Delete untagged ghcr
-      uses: Chizkiyahu/delete-untagged-ghcr-action@v2
-      with:
-        token: ${{ secrets.PACKAGES_TOKEN }}
-        repository: ${{ github.repository }}
-        package_name: mealplan
-        untagged_only: true
-        owner_type: user
