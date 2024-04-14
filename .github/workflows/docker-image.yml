@@ -19,12 +19,13 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - name: Build the Docker image
+      - name: Test docker build
         run: |
           cd app
-          docker build . --file Dockerfile --tag mealplan:$(date +%s)
+          docker build . --file Dockerfile.test --tag mealplan-test:$(date +%s)
+      - name: Run tests
+        run: docker run mealplan-test:$(date +%s)
     
-
   build:
     needs: test
     runs-on: ubuntu-latest
