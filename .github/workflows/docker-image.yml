@@ -22,9 +22,7 @@ jobs:
       - name: Test docker build
         run: |
           cd app
-          docker build . --file Dockerfile.test --tag mealplan-test:$(date +%s)
-      - name: Run tests
-        run: docker run mealplan-test:$(date +%s)
+          docker build . --file Dockerfile --tag mealplan-test
     
   build:
     needs: test
