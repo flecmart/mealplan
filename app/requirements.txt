@@ -8,4 +8,4 @@ recipe-scrapers==14.56.0
 todoist-api-python==2.1.5
 waitress==3.0.0
 lxml==5.1.0
-pytest==8.2.1
+pytest==8.2.2
