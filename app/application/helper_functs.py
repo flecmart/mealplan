@@ -5,8 +5,9 @@ import re
 
 from flask import flash
 from fractions import Fraction
+from urllib import request
 
-from recipe_scrapers import scrape_me
+from recipe_scrapers import scrape_html
 from recipe_scrapers._exceptions import SchemaOrgException
 from dataclasses import dataclass
 from application.models import Recipe
@@ -222,7 +223,8 @@ def prepare_ingredients(instructions):
         
 def scrape_recipe(link, icon):
     recipe = RecipeCache(None, None, None, None, None, None)
-    scraper = scrape_me(link)
+    html = request.urlopen(link).read()
+    scraper = scrape_html(html, org_url=link)
     
     recipe.name = scraper.title()
     try:
@@ -248,7 +250,8 @@ def scrape_recipe(link, icon):
 
 def scrape_generic_recipe(link, icon):
     recipe = RecipeCache(None, None, None, None, None, None)
-    scraper = scrape_me(link, wild_mode=True)
+    html = request.urlopen(link).read()
+    scraper = scrape_html(html, org_url=link, wild_mode=True)
     
     recipe.name = scraper.title()
     try:
