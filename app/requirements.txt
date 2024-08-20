@@ -1,7 +1,7 @@
 flask==3.0.3
 flask-sqlalchemy==3.1.1
 psycopg2==2.9.9
-nltk==3.8.1
+nltk==3.9.1
 selenium==4.23.1
 Pillow==10.4.0
 recipe-scrapers==15.0.0
