@@ -6,4 +6,5 @@ POSTGRES_DB=example
 FLASK_SECRET=secret
 TODOIST_TOKEN=123
 TODOIST_LIST=ShoppingList
-SCREENSHOT_URL=https://duckduckgo.com/
+SCREENSHOT_URL=http://localhost:5000/
+TZ=Europe/Berlin
