@@ -7,4 +7,4 @@ Pillow==11.0.0
 recipe-scrapers==15.3.2
 todoist-api-python==2.1.7
 waitress==3.0.2
-pytest==8.3.3
+pytest==8.3.4
