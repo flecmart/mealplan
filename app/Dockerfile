@@ -7,9 +7,9 @@ RUN apt-get update \
 COPY requirements.txt requirements.txt
 RUN pip install --no-cache-dir --upgrade pip \
 && pip install --no-cache-dir -r requirements.txt
+USER mealplan
 # download nltk data for natural language processing
 RUN python -c "import nltk; nltk.download('punkt_tab'); nltk.download('averaged_perceptron_tagger_eng')"
 EXPOSE 5000
 COPY . .
-USER mealplan
 CMD ["waitress-serve", "--port", "5000", "wsgi:app"]
