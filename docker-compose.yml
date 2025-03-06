@@ -41,6 +41,10 @@ services:
     depends_on:
       database:
         condition: service_healthy
+      redis:
+        condition: service_started
+      celery_worker:
+        condition: service_started 
 
   backups:
     container_name: mealplan_backups
