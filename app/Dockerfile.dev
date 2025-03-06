@@ -1,6 +1,6 @@
 FROM python:3.12
-WORKDIR /app
 RUN groupadd -r mealplan && useradd -r -m -g mealplan mealplan
+WORKDIR /home/mealplan
 # Install chromium
 RUN apt-get update \
 && apt-get install -y chromium chromium-driver
