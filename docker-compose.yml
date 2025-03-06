@@ -15,6 +15,22 @@ services:
       timeout: 5s
       retries: 5
 
+  redis:
+    container_name: redis
+    image: redis:7-alpine
+    restart: always
+
+  celery_worker:
+    container_name: celery_worker
+    build: 
+      context: app
+      dockerfile: Dockerfile.dev
+    command: celery -A application.cookidoo_celery_tasks worker --loglevel=info
+    restart: always
+    env_file: environment.conf
+    depends_on:
+      - redis
+
   app:
     container_name: mealplan
     image: ghcr.io/flecmart/mealplan:latest

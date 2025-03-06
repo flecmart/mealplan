@@ -18,6 +18,7 @@ from collections import defaultdict
 from application import database
 from application import helper_functs
 from application.models import db, Recipe, Event
+from application.cookidoo_celery_tasks import add_recipe_to_cookidoo_calendar, remove_recipe_from_cookidoo_calendar
 
 def get_todoist_project_id(api, name):
     for project in api.get_projects():
@@ -75,6 +76,11 @@ def cal_display():
                  return render_template('full-calendar.html', recipes=recipes)
 
         database.add_instance(Event, fk_recipe=recipe_id, date=date)
+        
+        recipe = Recipe.query.get(recipe_id)
+        if recipe and recipe.cookidoo_recipe_id:
+            add_recipe_to_cookidoo_calendar.delay(recipe.cookidoo_recipe_id, date)
+        
         return render_template('full-calendar.html', recipes=recipes)
 
 @current_app.post('/add-recipe')
@@ -137,7 +143,7 @@ def import_recipe():
     except Exception as ex:
         try:
             # try generic scraping for schema
-            recipe = helper_functs.scrape_generic_recipe(link, icon)
+            recipe = helper_functs.scrape_recipe(link, icon, wild_mode=True)
             if recipe == None:
                 return redirect(url_for('cal_display'))
             if recipe.instructions == '':
@@ -164,7 +170,8 @@ def import_cookidoo_instructions():
                               instructions=recipe['instructions'],
                               time=int(recipe['time']),
                               icon=recipe['icon'], 
-                              image=BytesIO(urlopen(recipe['image_url']).read()).read())
+                              image=BytesIO(urlopen(recipe['image_url']).read()).read(),
+                              cookidoo_recipe_id=recipe['cookidoo_id'])
         session['import_recipe_cache'] = None # reset cache
         flash(f'Rezept {recipe["name"]} gespeichert.', 'positive')
         return redirect(url_for('display_index'))
@@ -259,12 +266,17 @@ def move_meal():
     event_name = request.form["event_name"]
     event_delta = request.form["event_delta"]
 
-    old_date = datetime.strptime(event_date, '%Y-%m-%d') - timedelta(days=int(event_delta))
+    old_date = (datetime.strptime(event_date, '%Y-%m-%d') - timedelta(days=int(event_delta))).strftime('%Y-%m-%d')
 
     recipe = Recipe.query.filter_by(name=event_name).first()
-    event = Event.query.filter(and_(Event.date == old_date.strftime('%Y-%m-%d'), Event.fk_recipe == recipe.id)).first()
+    event = Event.query.filter(and_(Event.date == old_date, Event.fk_recipe == recipe.id)).first()
 
     database.update_instance(Event, event.id, date=event_date)
+    
+    if recipe and recipe.cookidoo_recipe_id:
+        remove_recipe_from_cookidoo_calendar.delay(recipe.cookidoo_recipe_id, old_date)
+        add_recipe_to_cookidoo_calendar.delay(recipe.cookidoo_recipe_id, event_date)
+    
 
     return jsonify(success=True)
 
@@ -276,7 +288,10 @@ def delete_meal_event():
     recipe = Recipe.query.filter_by(name=event_name).first()
     Event.query.filter(and_(Event.date == event_date, Event.fk_recipe == recipe.id)).delete()
     db.session.commit()
-
+    
+    if recipe and recipe.cookidoo_recipe_id:
+        remove_recipe_from_cookidoo_calendar.delay(recipe.cookidoo_recipe_id, event_date)
+    
     return redirect(url_for('cal_display'))
 
 @current_app.route("/ingredients")
@@ -339,7 +354,7 @@ def screenshot_week():
     driver.find_element('xpath', '//*[@id="calendar"]/div[1]/div[2]/div/button[2]').click()
     time.sleep(3)
     element = driver.find_element('xpath', '//*[@id="calendar"]/div[2]')
-    element.screenshot('/app/application/static/week.png')
+    sucess = element.screenshot('/app/application/static/week.png')
     im = Image.open('/app/application/static/week.png').convert('L')
     im = im.resize((800,600))
     im = im.rotate(90, expand=True)
