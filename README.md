@@ -83,6 +83,12 @@ Replace the backupfile name, `$CONTAINER`, `$USERNAME` and `$DBNAME` from the fo
 
 `zcat backupfile.sql.gz | docker exec --tty --interactive $CONTAINER psql --username=$USERNAME --dbname=$DBNAME -W`
 
+## migrate db
+
+1. install Flask-Migrate
+2. set FLASK_APP env variable
+3. from app `flask db upgrade`
+
 ## Inspiration & Development
 
 Some code and ideas, especially the html templates and the use of [fullcalendar.io](https://fullcalendar.io/) are inspired by this project: https://github.com/digitaljosh/meal-planner. The data models & routing were reimplemented to match our personal requirements. The user authentication system was dropped as I wanted to avoid to do the authentication myself and just run the app as a docker service locally, potentially exposing it with a reverse proxy. Also the use of the [spoonacular api](https://spoonacular.com/food-api) to import recipes was replaced by using https://pypi.org/project/recipe-scrapers/ to support multiple recipe websites & languages.

@@ -28,6 +28,7 @@ class RecipeCache:
     instructions: str
     icon: str
     image_url: str
+    cookidoo_id: str
 
 
 def get_today_string():
@@ -220,11 +221,21 @@ def prepare_ingredients(instructions):
                         .replace('Schalotten', 'Schalotte(n)')
                         .replace ('wiebeln','wiebel(n)'))
     return result
-        
-def scrape_recipe(link, icon):
-    recipe = RecipeCache(None, None, None, None, None, None)
+
+def extract_cookidoo_recipe_id(url):
+    pattern = r"cookidoo\.de/recipes/recipe/de-DE/(r\d+)"
+    match = re.search(pattern, url)
+
+    if match:
+        return match.group(1)
+    else:
+        return None
+
+
+def scrape_recipe(link, icon, wild_mode=False):
+    recipe = RecipeCache(None, None, None, None, None, None, None)
     html = request.urlopen(link).read()
-    scraper = scrape_html(html, org_url=link)
+    scraper = scrape_html(html, org_url=link, wild_mode=wild_mode)
     
     recipe.name = scraper.title()
     try:
@@ -233,6 +244,7 @@ def scrape_recipe(link, icon):
         recipe.time = 30 # use default 30 mins
     recipe.ingredients = ';'.join(prepare_ingredients(scraper.ingredients()))
     recipe.instructions = scraper.instructions()
+    recipe.cookidoo_id =  extract_cookidoo_recipe_id(link)
 
     same_recipe = Recipe.query.filter_by(name=recipe.name).first()
     if same_recipe:
@@ -247,30 +259,4 @@ def scrape_recipe(link, icon):
     recipe.image_url = scraper.image()
 
     return recipe    
-
-def scrape_generic_recipe(link, icon):
-    recipe = RecipeCache(None, None, None, None, None, None)
-    html = request.urlopen(link).read()
-    scraper = scrape_html(html, org_url=link, wild_mode=True)
-    
-    recipe.name = scraper.title()
-    try:
-        recipe.time = scraper.total_time()
-    except SchemaOrgException:
-        recipe.time = 30 # use default 30 mins
-    recipe.ingredients = ';'.join(prepare_ingredients(scraper.ingredients()))
-    recipe.instructions = scraper.instructions()
-    
-    same_recipe = Recipe.query.filter_by(name=recipe.name).first()
-    if same_recipe:
-        flash(f'Das Rezept {recipe.name} existiert bereits.', 'negative')
-        return None
-
-    if icon == '':
-        recipe.icon = 'defaultIcon.png'
-    else:
-        recipe.icon = icon
-
-    recipe.image_url = scraper.image()
-    
-    return recipe    
+  

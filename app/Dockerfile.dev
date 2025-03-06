@@ -1,5 +1,6 @@
-FROM python:3.10
+FROM python:3.12
 WORKDIR /app
+RUN groupadd -r mealplan && useradd -r -m -g mealplan mealplan
 # Install chromium
 RUN apt-get update \
 && apt-get install -y chromium chromium-driver
@@ -10,4 +11,5 @@ RUN pip install --no-cache-dir --upgrade pip \
 RUN python -c "import nltk; nltk.download('punkt_tab'); nltk.download('averaged_perceptron_tagger_eng')"
 EXPOSE 5000
 COPY . .
+USER mealplan
 CMD ["python", "wsgi.py"]

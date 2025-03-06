@@ -28,6 +28,26 @@ services:
     depends_on:
       database:
         condition: service_healthy
+      redis:
+        condition: service_started
+      celery_worker:
+        condition: service_started 
+      
+
+  redis:
+    container_name: redis
+    image: redis:7-alpine
+
+  celery_worker:
+    container_name: celery_worker
+    build: 
+      context: app
+      dockerfile: Dockerfile.dev
+    command: celery -A application.cookidoo_celery_tasks worker --loglevel=info
+    restart: "no"
+    env_file: environment.conf
+    depends_on:
+      - redis
 
 volumes:
   db_volume:

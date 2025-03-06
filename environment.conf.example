@@ -1,3 +1,4 @@
+FLASK_APP=application
 POSTGRES_USER=postgres
 POSTGRES_PASSWORD=password
 POSTGRES_HOST=mealplan_db
@@ -8,3 +9,5 @@ TODOIST_TOKEN=123
 TODOIST_LIST=ShoppingList
 SCREENSHOT_URL=http://localhost:5000/
 TZ=Europe/Berlin
+COOKIDOO_EMAIL=cookidoo_account
+COOKIDOO_PASSWORD=cookidoo_account

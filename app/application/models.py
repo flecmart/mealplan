@@ -16,15 +16,17 @@ class Recipe(db.Model):
     time = db.Column(db.Integer, nullable=True) # time in minutes
     icon = db.Column(db.String(64), nullable=False) # icon for calendar
     image = db.Column(db.LargeBinary, nullable=True) # optional recipe image
+    cookidoo_recipe_id = db.Column(db.String(16), nullable=True) # optional cookidoo id
     __table_args__ = (db.UniqueConstraint('name', name='_uc_recipe_name'),)
     
-    def __init__(self, name, ingredients, instructions, time, icon, image):
+    def __init__(self, name, ingredients, instructions, time, icon, image, cookidoo_recipe_id):
         self.name = name
         self.ingredients = ingredients
         self.instructions = instructions
         self.time = time
         self.icon = icon
         self.image = image
+        self.cookidoo_recipe_id = cookidoo_recipe_id
 
     def get_ingredients_list(self):
         return self.ingredients.split(';')
