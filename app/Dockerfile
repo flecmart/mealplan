@@ -1,4 +1,4 @@
-FROM python:3.12
+FROM python:3.13
 RUN groupadd -r mealplan && useradd -r -m -g mealplan mealplan
 WORKDIR /home/mealplan
 # Install chromium
