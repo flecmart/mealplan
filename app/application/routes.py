@@ -21,9 +21,10 @@ from application.models import db, Recipe, Event
 from application.cookidoo_celery_tasks import add_recipe_to_cookidoo_calendar, remove_recipe_from_cookidoo_calendar
 
 def get_todoist_project_id(api, name):
-    for project in api.get_projects():
-        if project.name == name:
-            return project.id
+    for project_list_page in api.get_projects():
+        for project in project_list_page:
+            if project.name == name:
+                return project.id
     return None
 
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif'])
