@@ -8,7 +8,7 @@ Pillow==11.2.1
 recipe-scrapers==15.8.0
 todoist-api-python==3.1.0
 waitress==3.0.2
-pytest==8.3.5
+pytest==8.4.0
 Flask-Testing==0.8.1
 celery==5.5.3
 redis==5.2.1
