@@ -11,5 +11,5 @@ waitress==3.0.2
 pytest==8.4.0
 Flask-Testing==0.8.1
 celery==5.5.3
-redis==5.2.1
+redis==5.3.0
 cookidoo_api==0.13.0
