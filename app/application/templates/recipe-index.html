@@ -14,10 +14,9 @@
         <ul id="recipeList" style="margin-top: 15px;">
             {% for recipe in recipes|sort(attribute='name') %}
                 <li>
-                    <div>
-                        <a href="{{ url_for('display_recipe', recipe_id=recipe.id) }}">{{ recipe.name }}
-                        <div style="display:none;">{{recipe.ingredients}}</div>
-                    </div>
+                    <a href="{{ url_for('display_recipe', recipe_id=recipe.id) }}" data-ingredients="{{ recipe.ingredients }}">
+                        {{ recipe.name }}
+                    </a>
                 </li>   
             {% endfor %}
         </ul>
