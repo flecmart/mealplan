@@ -12,4 +12,4 @@ pytest==8.4.2
 Flask-Testing==0.8.1
 celery==5.5.3
 redis==5.3.1
-cookidoo_api==0.14.0
+cookidoo_api==0.15.0
