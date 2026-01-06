@@ -10,6 +10,6 @@ todoist-api-python==3.1.0
 waitress==3.0.2
 pytest==9.0.2
 Flask-Testing==0.8.1
-celery==5.6.0
+celery==5.6.2
 redis==7.1.0
 cookidoo_api==0.15.0
