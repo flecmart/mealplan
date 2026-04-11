@@ -6,7 +6,7 @@ nltk==3.9.4
 selenium==4.41.0
 Pillow==12.2.0
 recipe-scrapers==15.11.0
-todoist-api-python==3.2.1
+todoist-api-python==4.0.0
 waitress==3.0.2
 pytest==9.0.2
 Flask-Testing==0.8.1
