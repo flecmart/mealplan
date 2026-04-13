@@ -3,7 +3,7 @@ flask-sqlalchemy==3.1.1
 Flask-Migrate==4.1.0
 psycopg2==2.9.11
 nltk==3.9.4
-selenium==4.41.0
+selenium==4.43.0
 Pillow==12.2.0
 recipe-scrapers==15.11.0
 todoist-api-python==4.0.0
