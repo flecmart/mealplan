@@ -11,7 +11,6 @@ In our household we need an overview of our recipes and a calendar that we can p
 Dependencies:
   
 - [docker & docker-compose](https://www.docker.com/get-started)  
-- [GNU make](https://chocolatey.org/packages/make) (for debugging on a windows machine)
 
 1. Clone the repository:
 
