@@ -11,12 +11,13 @@ celery_app.conf.broker_connection_retry_on_startup = True
 
 __email = os.environ.get('COOKIDOO_EMAIL')
 __pass = os.environ.get('COOKIDOO_PASSWORD')
+__cookie_file = ".cookies"
 
 @celery_app.task(bind=True, max_retries=3, retry_backoff=True)
 def add_recipe_to_cookidoo_calendar(self, recipe_id, date):
     try:
         async def run_cookidoo_task():
-            async with aiohttp.ClientSession() as session:
+            async with aiohttp.ClientSession(cookie_jar=aiohttp.CookieJar(unsafe=True)) as session:
                 cookidoo = Cookidoo(
                     session,
                     cfg=CookidooConfig(
@@ -27,8 +28,12 @@ def add_recipe_to_cookidoo_calendar(self, recipe_id, date):
                         )[0],
                     ),
                 )
-                await cookidoo.login()
-                await cookidoo.refresh_token()
+                # Try to load saved cookies, otherwise login fresh
+                try:
+                    cookidoo.load_cookies(__cookie_file)
+                except Exception:
+                    await cookidoo.login()
+                    cookidoo.save_cookies(__cookie_file)
                 await cookidoo.add_recipes_to_calendar(datetime.strptime(date, '%Y-%m-%d').date(), [recipe_id])
 
         asyncio.run(run_cookidoo_task())
@@ -45,7 +50,7 @@ def add_recipe_to_cookidoo_calendar(self, recipe_id, date):
 def remove_recipe_from_cookidoo_calendar(self, recipe_id, date):
     try:
         async def run_cookidoo_task():
-            async with aiohttp.ClientSession() as session:
+            async with aiohttp.ClientSession(cookie_jar=aiohttp.CookieJar(unsafe=True)) as session:
                 cookidoo = Cookidoo(
                     session,
                     cfg=CookidooConfig(
@@ -56,8 +61,12 @@ def remove_recipe_from_cookidoo_calendar(self, recipe_id, date):
                         )[0],
                     ),
                 )
-                await cookidoo.login()
-                await cookidoo.refresh_token()
+                # Try to load saved cookies, otherwise login fresh
+                try:
+                    cookidoo.load_cookies(__cookie_file)
+                except Exception:
+                    await cookidoo.login()
+                    cookidoo.save_cookies(__cookie_file)
                 await cookidoo.remove_recipe_from_calendar(datetime.strptime(date, '%Y-%m-%d').date(), recipe_id)
 
         asyncio.run(run_cookidoo_task())
