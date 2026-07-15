@@ -1,3 +1,4 @@
+import json
 import logging
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -111,10 +112,54 @@ def test_on_failure_logs_error_with_traceback(caplog):
         raise RuntimeError("permanent failure")
     except RuntimeError as exc:
         with caplog.at_level(logging.ERROR, logger="application.cookidoo_celery_tasks"):
-            task.on_failure(exc, "task-id", (), {}, None)
+            with patch.object(tasks, "_report_sync_status"):
+                task.on_failure(exc, "task-id", ("r123",), {}, None)
 
     error_records = [r for r in caplog.records if r.levelno == logging.ERROR]
     assert error_records, "expected an error log record"
     assert "failed permanently" in caplog.text
     # exc_info must be attached so the traceback is emitted.
     assert error_records[0].exc_info is not None
+
+
+# --- stale-link reporting to the main app ------------------------------------
+
+def test_on_failure_reports_recipe_stale():
+    task = tasks.add_recipe_to_cookidoo_calendar
+    with patch.object(tasks, "_report_sync_status") as report:
+        task.on_failure(RuntimeError("boom"), "task-id", ("r801516", "2026-07-15"), {}, None)
+    report.assert_called_once_with("r801516", True)
+
+
+def test_on_success_clears_recipe_stale():
+    task = tasks.add_recipe_to_cookidoo_calendar
+    with patch.object(tasks, "_report_sync_status") as report:
+        task.on_success(None, "task-id", ("r801516", "2026-07-15"), {})
+    report.assert_called_once_with("r801516", False)
+
+
+def test_report_sync_status_posts_expected_payload():
+    with patch("urllib.request.urlopen") as urlopen:
+        tasks._report_sync_status("r801516", True)
+
+    urlopen.assert_called_once()
+    req = urlopen.call_args.args[0]
+    assert req.full_url.endswith("/internal/cookidoo-sync-status")
+    assert req.method == "POST"
+    body = json.loads(req.data.decode())
+    assert body == {"cookidoo_id": "r801516", "stale": True}
+
+
+def test_report_sync_status_swallows_errors(caplog):
+    with patch("urllib.request.urlopen", side_effect=OSError("connection refused")):
+        with caplog.at_level(logging.WARNING, logger="application.cookidoo_celery_tasks"):
+            # must not raise
+            tasks._report_sync_status("r801516", True)
+    assert "Could not report cookidoo sync status" in caplog.text
+
+
+def test_report_sync_status_noop_without_id():
+    with patch("urllib.request.urlopen") as urlopen:
+        tasks._report_sync_status(None, True)
+        tasks._report_sync_status("", False)
+    urlopen.assert_not_called()

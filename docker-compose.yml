@@ -20,6 +20,16 @@ services:
     image: redis:7-alpine
     restart: always
 
+  migrate:
+    container_name: mealplan_migrate
+    image: ghcr.io/flecmart/mealplan:latest
+    command: flask db upgrade
+    restart: "no"
+    env_file: environment.conf
+    depends_on:
+      database:
+        condition: service_healthy
+
   celery_worker:
     container_name: celery_worker
     image: ghcr.io/flecmart/mealplan:latest
@@ -39,10 +49,12 @@ services:
     depends_on:
       database:
         condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
       redis:
         condition: service_started
       celery_worker:
-        condition: service_started 
+        condition: service_started
 
   backups:
     container_name: mealplan_backups
