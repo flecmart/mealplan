@@ -53,7 +53,9 @@ async def _authenticated_cookidoo(session):
     try:
         cookidoo.load_cookies(__cookie_file)
         await cookidoo.get_user_info()
-    except (CookidooException, OSError):
+    except (CookidooException, OSError) as e:
+        logger.warning("Cookie session unusable (%s: %s); logging in fresh",
+                       type(e).__name__, e)
         await cookidoo.login()
         cookidoo.save_cookies(__cookie_file)
     return cookidoo
