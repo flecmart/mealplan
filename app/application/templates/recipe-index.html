@@ -16,6 +16,7 @@
                 <li>
                     <a href="{{ url_for('display_recipe', recipe_id=recipe.id) }}" data-ingredients="{{ recipe.ingredients }}">
                         {{ recipe.name }}
+                        {% if recipe.cookidoo_sync_error %}<span title="Cookidoo-Link veraltet" style="color: #ff6b6b;">⚠️</span>{% endif %}
                     </a>
                 </li>   
             {% endfor %}

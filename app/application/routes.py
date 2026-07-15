@@ -205,6 +205,11 @@ def edit_recipe():
 
     ingredients = ';'.join(ingredients.splitlines())
 
+    # cookidoo link/id: accept either a full recipe URL (extract the id) or a bare id.
+    # editing it clears any stale-link warning so the user can fix broken links here.
+    raw_cookidoo = request.form.get('cookidoo_recipe_id', '').strip()
+    cookidoo_id = (helper_functs.extract_cookidoo_recipe_id(raw_cookidoo) or raw_cookidoo) if raw_cookidoo else None
+
     same_recipe = Recipe.query.filter_by(name=name).first()
     if same_recipe and same_recipe.id != recipe_id:
         flash(f'Das Rezept {name} existiert bereits.', 'negative')
@@ -212,12 +217,12 @@ def edit_recipe():
 
     # if user does not select file, browser also submit an empty part without filename
     if image.filename == '':
-        database.update_instance(Recipe, recipe_id, name=name, ingredients=str(ingredients), instructions=instructions, time=int(time), icon=icon)
+        database.update_instance(Recipe, recipe_id, name=name, ingredients=str(ingredients), instructions=instructions, time=int(time), icon=icon, cookidoo_recipe_id=cookidoo_id, cookidoo_sync_error=False)
     elif not allowed_file(image.filename):
         flash(f'Nur folgende Dateiformate für Bilder erlaubt: {ALLOWED_EXTENSIONS}.', 'negative')
         return redirect(url_for('display_index'))
     else:
-        database.update_instance(Recipe, recipe_id, name=name, ingredients=str(ingredients), instructions=instructions, time=int(time), icon=icon, image=image.read())
+        database.update_instance(Recipe, recipe_id, name=name, ingredients=str(ingredients), instructions=instructions, time=int(time), icon=icon, image=image.read(), cookidoo_recipe_id=cookidoo_id, cookidoo_sync_error=False)
         
     flash(f'Rezept {name} gespeichert.', 'positive')
     return redirect(url_for('display_index'))
@@ -295,6 +300,31 @@ def delete_meal_event():
     
     return redirect(url_for('cal_display'))
 
+@current_app.post("/internal/cookidoo-sync-status")
+def cookidoo_sync_status():
+    """Internal endpoint the Celery worker calls to flag a stale Cookidoo link.
+
+    The worker has no DB access, so on a permanent calendar-sync failure (or a
+    later success) it POSTs the Cookidoo recipe id here and this handler flips
+    the recipe's ``cookidoo_sync_error`` flag. Marking is non-destructive: the
+    ``cookidoo_recipe_id`` itself is never touched, only the warning flag.
+    """
+    payload = request.get_json(silent=True) or request.form
+    cookidoo_id = (payload.get('cookidoo_id') or '').strip()
+    stale = str(payload.get('stale')).lower() in ('1', 'true', 'yes')
+
+    if not cookidoo_id:
+        return jsonify(success=False, error='missing cookidoo_id'), 400
+
+    recipe = Recipe.query.filter_by(cookidoo_recipe_id=cookidoo_id).first()
+    if recipe is None:
+        # nothing to flag (recipe deleted / id changed) — not an error
+        return jsonify(success=True, matched=False)
+
+    recipe.cookidoo_sync_error = stale
+    db.session.commit()
+    return jsonify(success=True, matched=True)
+
 @current_app.route("/ingredients")
 def display_ingredients():
     """
@@ -351,7 +381,7 @@ def screenshot_week():
     chrome_options.add_argument('--no-sandbox')
     chrome_options.add_argument('--hide-scrollbars')
     driver = webdriver.Chrome(options=chrome_options)
-    driver.get(os.environ["SCREENSHOT_URL"])
+    driver.get(os.environ["BASE_URL"])
     driver.find_element('xpath', '//*[@id="calendar"]/div[1]/div[2]/div/button[2]').click()
     time.sleep(3)
     element = driver.find_element('xpath', '//*[@id="calendar"]/div[2]')

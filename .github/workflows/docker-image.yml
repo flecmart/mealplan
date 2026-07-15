@@ -19,6 +19,21 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Install dev dependencies
+        run: pip install --no-cache-dir -r app/requirements-dev.txt
+      - name: Run tests
+        working-directory: app
+        env:
+          FLASK_SECRET: test-secret
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_HOST: localhost
+          POSTGRES_DB: test
+          POSTGRES_PORT: "5432"
+        run: python -m pytest
       - name: Test docker build
         run: |
           cd app

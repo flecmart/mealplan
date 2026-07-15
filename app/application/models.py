@@ -17,9 +17,11 @@ class Recipe(db.Model):
     icon = db.Column(db.String(64), nullable=False) # icon for calendar
     image = db.Column(db.LargeBinary, nullable=True) # optional recipe image
     cookidoo_recipe_id = db.Column(db.String(16), nullable=True) # optional cookidoo id
+    # set when a cookidoo calendar sync fails permanently, so the stale link can be flagged in the UI
+    cookidoo_sync_error = db.Column(db.Boolean, nullable=False, server_default='false', default=False)
     __table_args__ = (db.UniqueConstraint('name', name='_uc_recipe_name'),)
-    
-    def __init__(self, name, ingredients, instructions, time, icon, image, cookidoo_recipe_id):
+
+    def __init__(self, name, ingredients, instructions, time, icon, image, cookidoo_recipe_id, cookidoo_sync_error=False):
         self.name = name
         self.ingredients = ingredients
         self.instructions = instructions
@@ -27,6 +29,7 @@ class Recipe(db.Model):
         self.icon = icon
         self.image = image
         self.cookidoo_recipe_id = cookidoo_recipe_id
+        self.cookidoo_sync_error = cookidoo_sync_error
 
     def get_ingredients_list(self):
         return self.ingredients.split(';')
