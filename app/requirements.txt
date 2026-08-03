@@ -9,5 +9,5 @@ recipe-scrapers==15.11.0
 todoist-api-python==4.0.0
 waitress==3.0.2
 celery==5.6.3
-redis==8.0.1
+redis==8.1.0
 cookidoo_api==0.17.2
