@@ -4,7 +4,7 @@ Flask-Migrate==4.1.0
 psycopg2==2.9.13
 nltk==3.10.3
 selenium==4.51.0
-Pillow==12.3.0
+Pillow==13.0.0
 recipe-scrapers==15.12.0
 todoist-api-python==4.0.0
 waitress==3.0.2
