@@ -94,7 +94,7 @@ def get_amount(ingredient_string):
                         else: pass
                     except TypeError:
                         try:
-                            pattern = re.compile("\d+-\d+")
+                            pattern = re.compile(r"\d+-\d+")
                             digits = []
                             if pattern.match(word):
                                 value_range = pattern.match(word)
@@ -222,14 +222,13 @@ def prepare_ingredients(instructions):
                         .replace ('wiebeln','wiebel(n)'))
     return result
 
-def extract_cookidoo_recipe_id(url):
-    pattern = r"cookidoo\.de/recipes/recipe/de-DE/(r\d+)"
-    match = re.search(pattern, url)
-
-    if match:
-        return match.group(1)
-    else:
-        return None
+def extract_cookidoo_recipe_id(value):
+    """Return a Cookidoo recipe id (e.g. 'r801516') from a URL or bare id, else None."""
+    value = (value or '').strip()
+    if re.fullmatch(r"r\d+", value):
+        return value
+    match = re.search(r"cookidoo\.[a-z.]+/recipes/recipe/[a-z]{2}(?:-[A-Z]{2})?/(r\d+)", value)
+    return match.group(1) if match else None
 
 
 def scrape_recipe(link, icon, wild_mode=False):

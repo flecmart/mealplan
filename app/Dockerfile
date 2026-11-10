@@ -1,12 +1,13 @@
-FROM python:3.13
+FROM python:3.14-trixie
 RUN groupadd -r mealplan && useradd -r -m -g mealplan mealplan
 WORKDIR /home/mealplan
 # Install chromium
 RUN apt-get update \
-&& apt-get install -y chromium chromium-driver
+ && apt-get install -y --no-install-recommends chromium chromium-driver \
+ && rm -rf /var/lib/apt/lists/*
 COPY requirements.txt requirements.txt
 RUN pip install --no-cache-dir --upgrade pip \
-&& pip install --no-cache-dir -r requirements.txt
+ && pip install --no-cache-dir -r requirements.txt
 USER mealplan
 # download nltk data for natural language processing
 RUN python -c "import nltk; nltk.download('punkt_tab'); nltk.download('averaged_perceptron_tagger_eng')"

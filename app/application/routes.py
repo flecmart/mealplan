@@ -172,12 +172,12 @@ def import_cookidoo_instructions():
                               time=int(recipe['time']),
                               icon=recipe['icon'], 
                               image=BytesIO(urlopen(recipe['image_url']).read()).read(),
-                              cookidoo_recipe_id=recipe['cookidoo_id'])
+                              cookidoo_recipe_id=helper_functs.extract_cookidoo_recipe_id(recipe['cookidoo_id'] or ''))
         session['import_recipe_cache'] = None # reset cache
         flash(f'Rezept {recipe["name"]} gespeichert.', 'positive')
         return redirect(url_for('display_index'))
     else:
-        flash(f'Rezept {recipe["name"]} konnte nicht gespeichert werden.', 'negative')
+        flash('Rezept konnte nicht gespeichert werden (Import-Daten abgelaufen).', 'negative')
     return redirect(url_for('cal_display'))
 
 def replace_thermomix_symbols(instructions):
@@ -208,7 +208,12 @@ def edit_recipe():
     # cookidoo link/id: accept either a full recipe URL (extract the id) or a bare id.
     # editing it clears any stale-link warning so the user can fix broken links here.
     raw_cookidoo = request.form.get('cookidoo_recipe_id', '').strip()
-    cookidoo_id = (helper_functs.extract_cookidoo_recipe_id(raw_cookidoo) or raw_cookidoo) if raw_cookidoo else None
+    cookidoo_id = None
+    if raw_cookidoo:
+        cookidoo_id = helper_functs.extract_cookidoo_recipe_id(raw_cookidoo)
+        if cookidoo_id is None:
+            flash(f'Cookidoo-Link nicht erkannt: {raw_cookidoo}', 'negative')
+            return redirect(url_for('display_index'))
 
     same_recipe = Recipe.query.filter_by(name=name).first()
     if same_recipe and same_recipe.id != recipe_id:

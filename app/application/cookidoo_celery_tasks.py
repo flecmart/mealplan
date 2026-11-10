@@ -5,7 +5,7 @@ import json
 import logging
 import os
 import urllib.request
-from cookidoo_api import Cookidoo, CookidooConfig, CookidooException
+from cookidoo_api import Cookidoo, CookidooConfig, CookidooException, CookidooAuthException
 from cookidoo_api.helpers import get_localization_options
 from datetime import datetime
 
@@ -18,6 +18,18 @@ celery_app.conf.broker_connection_retry_on_startup = True
 # reports stale/recovered cookidoo links to it over HTTP (see _report_sync_status).
 # Same BASE_URL the app uses for screenshots.
 __base_url = os.environ.get('BASE_URL', 'http://localhost:5000')
+
+# Errors that say nothing about whether the recipe id itself is valid.
+_NOT_STALE_ERRORS = (CookidooAuthException, aiohttp.ClientError, asyncio.TimeoutError, OSError)
+
+# Retry for minutes, not seconds: ~30s, 60s, 120s, 240s, 480s (with jitter).
+_RETRY_OPTS = dict(
+    max_retries=5,
+    autoretry_for=(Exception,),
+    retry_backoff=30,
+    retry_backoff_max=900,
+    retry_jitter=True,
+)
 
 
 def _report_sync_status(cookidoo_id, stale):
@@ -40,7 +52,8 @@ def _report_sync_status(cookidoo_id, stale):
 
 
 class CookidooTask(celery_app.Task):
-    """Base task that logs Cookidoo calendar retries and permanent failures."""
+    """Base task: logs retries and permanent failures. Never touches the stale flag."""
+    report_stale = False
 
     def on_retry(self, exc, task_id, args, kwargs, einfo):
         logger.warning(
@@ -50,18 +63,28 @@ class CookidooTask(celery_app.Task):
 
     def on_failure(self, exc, task_id, args, kwargs, einfo):
         logger.error(
-            "Task %s[%s] failed permanently after %s retries: %s",
-            self.name, task_id, self.request.retries, exc, exc_info=exc,
+            "Task %s[%s] failed permanently after %s retries: %s (%s)",
+            self.name, task_id, self.request.retries, exc, type(exc).__name__, exc_info=exc,
         )
-        # args[0] is the cookidoo recipe id; flag its recipe so the stale link
-        # surfaces in the UI for the user to fix manually.
-        if args:
+        # Only flag the link as stale if the error could actually be caused by
+        # a bad recipe id (not login, network or timeout problems).
+        if self.report_stale and args and not isinstance(exc, _NOT_STALE_ERRORS):
             _report_sync_status(args[0], True)
 
     def on_success(self, retval, task_id, args, kwargs):
-        # a successful sync clears any previous stale-link warning
-        if args:
+        # a successful add clears any previous stale-link warning
+        if self.report_stale and args:
             _report_sync_status(args[0], False)
+
+
+class CookidooAddTask(CookidooTask):
+    """Only a failed *add* can mean the recipe id itself is broken.
+
+    Removes are excluded on purpose: removing a recipe that isn't on the
+    Cookidoo calendar fails too, which says nothing about the link.
+    """
+    report_stale = True
+
 
 __email = os.environ.get('COOKIDOO_EMAIL')
 __pass = os.environ.get('COOKIDOO_PASSWORD')
@@ -95,12 +118,9 @@ async def _authenticated_cookidoo(session):
         cookidoo.save_cookies(__cookie_file)
     return cookidoo
 
-@celery_app.task(base=CookidooTask, max_retries=3, retry_backoff=True, autoretry_for=(Exception,))
+@celery_app.task(base=CookidooAddTask, **_RETRY_OPTS)
 def add_recipe_to_cookidoo_calendar(recipe_id, date):
     """Add a recipe to the Cookidoo calendar on the given date.
-
-    Any error is retried up to max_retries with exponential backoff; retries and
-    the final failure are logged by CookidooTask.
 
     Args:
         recipe_id: Cookidoo recipe id to add.
@@ -113,12 +133,11 @@ def add_recipe_to_cookidoo_calendar(recipe_id, date):
 
     asyncio.run(run_cookidoo_task())
 
-@celery_app.task(base=CookidooTask, max_retries=3, retry_backoff=True, autoretry_for=(Exception,))
+@celery_app.task(base=CookidooTask, **_RETRY_OPTS)
 def remove_recipe_from_cookidoo_calendar(recipe_id, date):
     """Remove a recipe from the Cookidoo calendar on the given date.
 
-    Any error is retried up to max_retries with exponential backoff; retries and
-    the final failure are logged by CookidooTask.
+    Never flags the recipe as stale (see CookidooAddTask).
 
     Args:
         recipe_id: Cookidoo recipe id to remove.

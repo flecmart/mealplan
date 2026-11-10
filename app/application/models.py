@@ -36,7 +36,7 @@ class Recipe(db.Model):
 
     def get_instructions(self):
         # remove step numbers (digits) if present since they are not ubiquitous in api recipes. Step nums added in template view
-        instructions = re.sub('\d+\.', '', self.instructions)
+        instructions = re.sub(r'^\s*\d+\.\s*', '', self.instructions, flags=re.MULTILINE)
         
         # removes html tags
         instructions = re.sub('<.*?>', '', instructions)
