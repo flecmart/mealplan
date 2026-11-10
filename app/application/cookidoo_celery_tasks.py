@@ -19,9 +19,6 @@ celery_app.conf.broker_connection_retry_on_startup = True
 # Same BASE_URL the app uses for screenshots.
 __base_url = os.environ.get('BASE_URL', 'http://localhost:5000')
 
-# Errors that say nothing about whether the recipe id itself is valid.
-_NOT_STALE_ERRORS = (CookidooAuthException, aiohttp.ClientError, asyncio.TimeoutError, OSError)
-
 # Retry for minutes, not seconds: ~30s, 60s, 120s, 240s, 480s (with jitter).
 _RETRY_OPTS = dict(
     max_retries=5,
@@ -66,9 +63,7 @@ class CookidooTask(celery_app.Task):
             "Task %s[%s] failed permanently after %s retries: %s (%s)",
             self.name, task_id, self.request.retries, exc, type(exc).__name__, exc_info=exc,
         )
-        # Only flag the link as stale if the error could actually be caused by
-        # a bad recipe id (not login, network or timeout problems).
-        if self.report_stale and args and not isinstance(exc, _NOT_STALE_ERRORS):
+        if self.report_stale and args:
             _report_sync_status(args[0], True)
 
     def on_success(self, retval, task_id, args, kwargs):
@@ -88,7 +83,7 @@ class CookidooAddTask(CookidooTask):
 
 __email = os.environ.get('COOKIDOO_EMAIL')
 __pass = os.environ.get('COOKIDOO_PASSWORD')
-__cookie_file = ".cookies"
+__token_file = ".cookidoo_token"
 
 async def _authenticated_cookidoo(session):
     """Return a Cookidoo client with a valid session.
@@ -109,14 +104,14 @@ async def _authenticated_cookidoo(session):
         ),
     )
     try:
-        cookidoo.load_cookies(__cookie_file)
+        cookidoo.load_token(__token_file)
         await cookidoo.get_user_info()
-    except (CookidooException, OSError) as e:
-        logger.warning("Cookie session unusable (%s: %s); logging in fresh",
+    except (CookidooException, OSError, ValueError) as e:
+        logger.warning("Stored token unusable (%s: %s); logging in fresh",
                        type(e).__name__, e)
         await cookidoo.login()
-        cookidoo.save_cookies(__cookie_file)
     return cookidoo
+
 
 @celery_app.task(base=CookidooAddTask, **_RETRY_OPTS)
 def add_recipe_to_cookidoo_calendar(recipe_id, date):
@@ -130,6 +125,7 @@ def add_recipe_to_cookidoo_calendar(recipe_id, date):
         async with aiohttp.ClientSession(cookie_jar=aiohttp.CookieJar(unsafe=True)) as session:
             cookidoo = await _authenticated_cookidoo(session)
             await cookidoo.add_recipes_to_calendar(datetime.strptime(date, '%Y-%m-%d').date(), [recipe_id])
+            cookidoo.save_token(__token_file)
 
     asyncio.run(run_cookidoo_task())
 
@@ -147,5 +143,6 @@ def remove_recipe_from_cookidoo_calendar(recipe_id, date):
         async with aiohttp.ClientSession(cookie_jar=aiohttp.CookieJar(unsafe=True)) as session:
             cookidoo = await _authenticated_cookidoo(session)
             await cookidoo.remove_recipe_from_calendar(datetime.strptime(date, '%Y-%m-%d').date(), recipe_id)
+            cookidoo.save_token(__token_file)
 
     asyncio.run(run_cookidoo_task())
