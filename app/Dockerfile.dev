@@ -1,9 +1,10 @@
-FROM python:3.13
+FROM python:3.14-trixie
 RUN groupadd -r mealplan && useradd -r -m -g mealplan mealplan
 WORKDIR /home/mealplan
 # Install chromium
 RUN apt-get update \
-&& apt-get install -y chromium chromium-driver
+ && apt-get install -y chromium chromium-driver \
+ && rm -rf /var/lib/apt/lists/*
 COPY requirements.txt requirements.txt
 COPY requirements-dev.txt requirements-dev.txt
 RUN pip install --no-cache-dir --upgrade pip \
