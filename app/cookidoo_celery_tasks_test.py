@@ -1,7 +1,9 @@
+import asyncio
 import json
 import logging
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import aiohttp
 import pytest
 from cookidoo_api import CookidooAuthException, CookidooConfigException
 
@@ -86,8 +88,12 @@ async def test_unparseable_cookie_file_triggers_relogin():
     [tasks.add_recipe_to_cookidoo_calendar, tasks.remove_recipe_from_cookidoo_calendar],
 )
 def test_task_retry_configuration(task):
-    assert task.max_retries == 3
-    assert task.retry_backoff is True
+    assert task.max_retries == 5
+    # Retries must span minutes, not seconds, so short outages don't become
+    # permanent failures (~30s, 60s, 120s, 240s, 480s, capped at 900s).
+    assert task.retry_backoff == 30
+    assert task.retry_backoff_max == 900
+    assert task.retry_jitter is True
     # autoretry_for is what actually engages retry_backoff (via Celery's
     # autoretry wrapper); without it, max_retries/backoff are inert.
     assert task.autoretry_for == (Exception,)
@@ -122,21 +128,70 @@ def test_on_failure_logs_error_with_traceback(caplog):
     assert error_records[0].exc_info is not None
 
 
-# --- stale-link reporting to the main app ------------------------------------
+def test_on_failure_log_includes_exception_type(caplog):
+    # The type name is logged so we can identify what a genuinely invalid
+    # recipe id raises and refine the stale detection later.
+    task = tasks.add_recipe_to_cookidoo_calendar
+    with caplog.at_level(logging.ERROR, logger="application.cookidoo_celery_tasks"):
+        with patch.object(tasks, "_report_sync_status"):
+            task.on_failure(ValueError("bad id"), "task-id", ("r0",), {}, None)
 
-def test_on_failure_reports_recipe_stale():
+    assert "ValueError" in caplog.text
+
+
+# --- stale-link reporting: add task ------------------------------------------
+
+def test_add_task_failure_reports_recipe_stale():
     task = tasks.add_recipe_to_cookidoo_calendar
     with patch.object(tasks, "_report_sync_status") as report:
         task.on_failure(RuntimeError("boom"), "task-id", ("r801516", "2026-07-15"), {}, None)
     report.assert_called_once_with("r801516", True)
 
 
-def test_on_success_clears_recipe_stale():
+def test_add_task_success_clears_recipe_stale():
     task = tasks.add_recipe_to_cookidoo_calendar
     with patch.object(tasks, "_report_sync_status") as report:
         task.on_success(None, "task-id", ("r801516", "2026-07-15"), {})
     report.assert_called_once_with("r801516", False)
 
+
+@pytest.mark.parametrize(
+    "exc",
+    [
+        CookidooAuthException("login failed"),
+        aiohttp.ClientConnectionError("connection reset"),
+        asyncio.TimeoutError(),
+        OSError("network unreachable"),
+    ],
+    ids=["auth", "client-error", "timeout", "oserror"],
+)
+def test_add_task_failure_from_infrastructure_error_not_reported_stale(exc):
+    # Login/network/timeout problems don't mean the recipe id is broken.
+    task = tasks.add_recipe_to_cookidoo_calendar
+    with patch.object(tasks, "_report_sync_status") as report:
+        task.on_failure(exc, "task-id", ("r801516", "2026-07-15"), {}, None)
+    report.assert_not_called()
+
+
+# --- stale-link reporting: remove task ---------------------------------------
+
+def test_remove_task_failure_never_reports_stale():
+    # Removing a recipe that isn't on the Cookidoo calendar fails too;
+    # that says nothing about whether the link is valid.
+    task = tasks.remove_recipe_from_cookidoo_calendar
+    with patch.object(tasks, "_report_sync_status") as report:
+        task.on_failure(RuntimeError("not on calendar"), "task-id", ("r801516", "2026-07-15"), {}, None)
+    report.assert_not_called()
+
+
+def test_remove_task_success_does_not_touch_stale_flag():
+    task = tasks.remove_recipe_from_cookidoo_calendar
+    with patch.object(tasks, "_report_sync_status") as report:
+        task.on_success(None, "task-id", ("r801516", "2026-07-15"), {})
+    report.assert_not_called()
+
+
+# --- _report_sync_status ------------------------------------------------------
 
 def test_report_sync_status_posts_expected_payload():
     with patch("urllib.request.urlopen") as urlopen:
