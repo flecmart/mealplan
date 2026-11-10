@@ -108,7 +108,7 @@
     <!-- stale cookidoo link warning -->
     {% if recipe.cookidoo_sync_error %}
     <div style="text-align: center; background-color: #b23b3b; color: #fff; padding: 8px; border-radius: 5px; margin: 8px auto; max-width: 600px;">
-        ⚠️ Cookidoo-Link veraltet{% if recipe.cookidoo_recipe_id %} (aktuell: {{ recipe.cookidoo_recipe_id }}){% endif %}.
+        ⚠️ Cookidoo-Sync Error (check celery_worker){% if recipe.cookidoo_recipe_id %} (aktuell: {{ recipe.cookidoo_recipe_id }}){% endif %}.
     </div>
     {% endif %}
 
