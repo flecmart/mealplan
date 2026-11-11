@@ -432,13 +432,14 @@ def screenshot_week():
     driver.find_element('xpath', '//*[@id="calendar"]/div[1]/div[2]/div/button[2]').click()
     time.sleep(3)
     element = driver.find_element('xpath', '//*[@id="calendar"]/div[2]')
-    success = element.screenshot('/home/mealplan/application/static/week.png')
+    screenshot_path = os.path.join(current_app.static_folder, 'week.png')
+    success = element.screenshot(screenshot_path)
     if not success:
         print(f'could not save screenshot due to permission errors')
-    im = Image.open('/home/mealplan/application/static/week.png').convert('L')
+    im = Image.open(screenshot_path).convert('L')
     im = im.resize((800,600))
     im = im.rotate(90, expand=True)
-    im.save('/home/mealplan/application/static/week.png')
+    im.save(screenshot_path)
     driver.quit()
     return redirect(bust_cache_url_for('static', filename='week.png'))
 

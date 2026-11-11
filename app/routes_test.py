@@ -10,6 +10,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from flask import Flask
 from itsdangerous import TimestampSigner
+from PIL import Image
 from application import create_app  # Assuming your Flask app factory is here
 from application import helper_functs
 from application.models import Recipe
@@ -76,18 +77,16 @@ def test_screenshot_week_generates_image(client, app):
         )
 
     # Define the expected path of the saved image
-    expected_image_path = '/home/mealplan/application/static/week.png'
+    expected_image_path = os.path.join(app.static_folder, 'week.png')
 
     # Ensure the image doesn't exist before the test
     if os.path.exists(expected_image_path):
         os.remove(expected_image_path)
 
     # Call the /week route
-    try:
-        response = client.get('/week')
-    except:
-        pass # ignore that the redirect won't work in devcontainer 
+    response = client.get('/week')
 
+    assert response.status_code == 302
     # Assert that the image file now exists
     assert os.path.exists(expected_image_path)
 
@@ -97,6 +96,31 @@ def test_screenshot_week_generates_image(client, app):
 
     # Clean up the image file after the test
     os.remove(expected_image_path)
+
+
+@pytest.fixture
+def week_png(app):
+    path = os.path.join(app.static_folder, "week.png")
+    yield path
+    if os.path.exists(path):
+        os.remove(path)
+
+
+def _fake_chromium_screenshot(path):
+    Image.new("RGB", (1200, 700), "white").save(path)
+    return True
+
+
+def test_screenshot_week_is_served_from_the_app_static_folder(client, week_png, monkeypatch):
+    monkeypatch.setenv("BASE_URL", "http://localhost:5000/")
+    with patch("application.routes.webdriver.Chrome") as Chrome, \
+         patch("application.routes.time.sleep"):
+        Chrome.return_value.find_element.return_value.screenshot.side_effect = _fake_chromium_screenshot
+        resp = client.get("/week")
+
+    assert resp.status_code == 302
+    assert resp.headers["Location"].startswith("/static/week.png?q=")
+    assert Image.open(week_png).size == (600, 800)
 
 
 # --- internal cookidoo sync-status endpoint (DB mocked, no live DB needed) ----
