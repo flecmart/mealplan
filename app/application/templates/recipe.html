@@ -12,6 +12,7 @@
         <div style="text-align: center;">
             <div style="margin: 5px; display: inline-block;">
                 <form action="{{ url_for('add_recipe') }}" method="post">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <input type="hidden" name="name" value="{{ recipe.name }}" />
                     <input type="hidden" name="time" value="{{ recipe.time }}" />
                     <input type="hidden" name="ingredients" value="{{ recipe.ingredients }}" />
@@ -44,6 +45,7 @@
     <!-- remove meal from calendar -->
     {% if recipe_date %}
     <form style="text-align: center;" action="/remove-meal" method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <input type="hidden" name="date_to_remove" value="{{ recipe_date }}">
         <input type="hidden" name="dinner_to_remove" value="{{ recipe.name }}">
         <input class="button5" style="color:black; margin-top: 2%;" type="submit" id="remove" value="Entfernen" />
@@ -72,6 +74,7 @@
             <!-- DELETE RECIPE from cookbook -->
             <div style="margin: 5px; display: inline-block;">
                 <form style="color:black;" action="{{ url_for('delete_recipe') }}" method="post">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <input type="hidden" name="id" value="{{ recipe.id }}" />
                     <input style="display: inline-block; position: relative;" type="submit" class="button5"
                         onclick="return confirm('Rezept aus Kochbuch löschen?')" value="Löschen" />
@@ -167,6 +170,7 @@
             <div class="modal-body">
 
                 <form class="form-horizontal" action="{{ url_for('edit_recipe') }}" method="post" role="form" enctype=multipart/form-data>
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <div class="form-group">
                         <label class="col-sm-2 control-label" for="inputName">Name</label>
                         <div class="col-sm-10">

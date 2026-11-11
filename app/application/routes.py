@@ -5,6 +5,8 @@ import json
 import time
 
 from datetime import datetime, timedelta
+from urllib.parse import urlparse
+from flask_wtf.csrf import CSRFError
 from flask import current_app, request, flash, render_template, jsonify, redirect, session
 from sqlalchemy import and_
 from todoist_api_python.api import TodoistAPI
@@ -13,6 +15,7 @@ from selenium.webdriver.chrome.options import Options
 from PIL import Image
 from collections import defaultdict
 
+from application import csrf
 from application import database
 from application import helper_functs
 from application.models import db, Recipe, Event
@@ -29,6 +32,20 @@ ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif'])
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+@current_app.before_request
+def keep_session_across_browser_restarts():
+    session.permanent = True
+
+@current_app.errorhandler(CSRFError)
+def recover_from_csrf_error(error):
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return jsonify(success=False, error='csrf'), 400
+    flash('Sitzung abgelaufen, bitte nochmal versuchen.', 'negative')
+    referrer = request.referrer or ''
+    if urlparse(referrer).netloc == request.host:
+        return redirect(referrer)
+    return redirect(url_for('cal_display'))
 
 ICON_DIR = os.path.join(current_app.static_folder, 'images')
 
@@ -330,6 +347,7 @@ def delete_meal_event():
     return redirect(url_for('cal_display'))
 
 @current_app.post("/internal/cookidoo-sync-status")
+@csrf.exempt
 def cookidoo_sync_status():
     """Internal endpoint the Celery worker calls to flag a stale Cookidoo link.
 
@@ -338,7 +356,7 @@ def cookidoo_sync_status():
     the recipe's ``cookidoo_sync_error`` flag. Marking is non-destructive: the
     ``cookidoo_recipe_id`` itself is never touched, only the warning flag.
     """
-    payload = request.get_json(silent=True) or request.form
+    payload = request.get_json() or {}
     cookidoo_id = (payload.get('cookidoo_id') or '').strip()
     stale = str(payload.get('stale')).lower() in ('1', 'true', 'yes')
 
@@ -424,14 +442,15 @@ def screenshot_week():
     driver.quit()
     return redirect(bust_cache_url_for('static', filename='week.png'))
 
-@current_app.route("/purge")
+@current_app.post("/purge")
+@csrf.exempt
 def purge_events():
     """
     Purge old events from calender.
-    Possible Query parameter: before=yyyy-mm-dd
+    Expects a JSON body; optional key: {"before": "yyyy-mm-dd"}
     Default behavior: purge events older than 6 months
     """
-    before_date = request.args.get('before')
+    before_date = (request.get_json() or {}).get('before')
 
     if before_date == 'undefined' or before_date is None:
         before_date = helper_functs.get_date_six_months_ago()

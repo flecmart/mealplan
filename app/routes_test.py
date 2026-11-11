@@ -3,11 +3,13 @@ import io
 import json
 import os
 import re
+import time
 import urllib.request
 from unittest.mock import MagicMock, patch
 
 import pytest
 from flask import Flask
+from itsdangerous import TimestampSigner
 from application import create_app  # Assuming your Flask app factory is here
 from application import helper_functs
 from application.models import Recipe
@@ -33,6 +35,7 @@ def app():
     """
     app = create_app()  # Initialize your Flask app
     app.config['TESTING'] = True
+    app.config['WTF_CSRF_ENABLED'] = False
     # You might need to configure other settings for testing
     with app.app_context():
         yield app
@@ -41,6 +44,13 @@ def app():
 def client(app):
     """A test client for the Flask application."""
     return app.test_client()
+
+@pytest.fixture
+def csrf_client(app):
+    app.config['WTF_CSRF_ENABLED'] = True
+    with app.app_context():
+        yield app.test_client()
+    app.config['WTF_CSRF_ENABLED'] = False
 
 @pytest.mark.skipif(os.getenv("CI") == "true",
                     reason="integration test needs Chromium + DB; skipped in CI")
@@ -91,11 +101,11 @@ def test_screenshot_week_generates_image(client, app):
 
 # --- internal cookidoo sync-status endpoint (DB mocked, no live DB needed) ----
 
-def test_internal_sync_status_marks_recipe_stale(client):
+def test_internal_sync_status_marks_recipe_stale(csrf_client):
     recipe = MagicMock()
     with patch("application.routes.Recipe") as R, patch("application.routes.db") as db_mock:
         R.query.filter_by.return_value.first.return_value = recipe
-        resp = client.post("/internal/cookidoo-sync-status",
+        resp = csrf_client.post("/internal/cookidoo-sync-status",
                            json={"cookidoo_id": "r801516", "stale": True})
 
     assert resp.status_code == 200
@@ -130,6 +140,15 @@ def test_internal_sync_status_unknown_id_is_noop(client):
 def test_internal_sync_status_missing_id_returns_400(client):
     resp = client.post("/internal/cookidoo-sync-status", json={"stale": True})
     assert resp.status_code == 400
+
+
+def test_internal_sync_status_rejects_form_post(csrf_client):
+    with patch("application.routes.Recipe"), patch("application.routes.db") as db_mock:
+        resp = csrf_client.post("/internal/cookidoo-sync-status",
+                                data={"cookidoo_id": "r801516", "stale": "true"})
+
+    assert resp.status_code == 415
+    db_mock.session.commit.assert_not_called()
 
 
 # --- editing the cookidoo id via the edit-recipe form (DB mocked) ------------
@@ -253,6 +272,11 @@ def test_import_recipe_rejects_unknown_icon(client):
     assert not scrape_recipe.called
 
 
+def _calendar_page(client):
+    with patch("application.routes.database.query_all", return_value=[]):
+        return client.get("/").get_data(as_text=True)
+
+
 def _recipe_page(client, icon="egg.png"):
     recipe = Recipe(name="Rezept", ingredients="Ei", instructions="kochen", time=20,
                     icon=icon, image=None, cookidoo_recipe_id=None)
@@ -260,3 +284,110 @@ def _recipe_page(client, icon="egg.png"):
     with patch("application.routes.Recipe") as R:
         R.query.filter_by.return_value.first.return_value = recipe
         return client.get("/recipe/1").get_data(as_text=True)
+
+
+def _meta_csrf_token(page):
+    return re.search(r'<meta name="csrf-token" content="([^"]+)"', page).group(1)
+
+
+def _form_csrf_token(page):
+    return re.search(r'name="csrf_token" value="([^"]+)"', page).group(1)
+
+
+def _delete_recipe(client, **kwargs):
+    with patch("application.routes.Event"), patch("application.routes.Recipe"), \
+         patch("application.routes.db") as db_mock:
+        resp = client.post("/delete-recipe", **kwargs)
+    return resp, db_mock.session.commit.called
+
+
+def test_form_post_without_csrf_token_returns_to_page_with_message(csrf_client):
+    resp, committed = _delete_recipe(
+        csrf_client, data={"id": "1"}, headers={"Referer": "http://localhost/recipe/1"})
+
+    assert not committed
+    assert resp.status_code == 302
+    assert resp.headers["Location"] == "http://localhost/recipe/1"
+    with csrf_client.session_transaction() as session:
+        assert session["_flashes"]
+
+
+def test_form_post_without_csrf_token_never_redirects_off_site(csrf_client):
+    resp, _ = _delete_recipe(
+        csrf_client, data={"id": "1"}, headers={"Referer": "https://evil.example/"})
+
+    assert resp.headers["Location"] == "/full-calendar"
+
+
+def test_ajax_post_without_csrf_token_tells_page_to_reload(csrf_client):
+    resp, committed = _delete_recipe(
+        csrf_client, data={"id": "1"}, headers={"X-Requested-With": "XMLHttpRequest"})
+
+    assert not committed
+    assert resp.status_code == 400
+    assert resp.get_json() == {"success": False, "error": "csrf"}
+
+
+@pytest.mark.parametrize("render", [_calendar_page, _recipe_page])
+def test_every_post_form_carries_csrf_token(csrf_client, render):
+    forms = re.findall(r'<form[^>]*method="post".*?</form>', render(csrf_client), re.S)
+
+    assert forms
+    for form in forms:
+        assert 'name="csrf_token"' in form
+
+
+def test_form_post_with_page_csrf_token_is_accepted(csrf_client):
+    token = _form_csrf_token(_calendar_page(csrf_client))
+
+    _, committed = _delete_recipe(csrf_client, data={"id": "1", "csrf_token": token})
+
+    assert committed
+
+
+def test_session_cookie_survives_browser_restart(client):
+    with patch("application.routes.database.query_all", return_value=[]):
+        resp = client.get("/")
+
+    assert "Expires=" in resp.headers["Set-Cookie"]
+
+
+def test_csrf_token_from_long_open_tab_is_still_accepted(csrf_client):
+    token = _form_csrf_token(_calendar_page(csrf_client))
+    a_day_later = int(time.time()) + 24 * 3600
+
+    with patch.object(TimestampSigner, "get_timestamp", return_value=a_day_later):
+        _, committed = _delete_recipe(csrf_client, data={"id": "1", "csrf_token": token})
+
+    assert committed
+
+
+def test_ajax_post_with_meta_csrf_token_header_is_accepted(csrf_client):
+    token = _meta_csrf_token(_calendar_page(csrf_client))
+
+    _, committed = _delete_recipe(csrf_client, data={"id": "1"}, headers={"X-CSRFToken": token})
+
+    assert committed
+
+
+def test_purge_rejects_get(client):
+    assert client.get("/purge").status_code == 405
+
+
+def test_purge_rejects_form_post(csrf_client):
+    with patch("application.routes.Event") as E, patch("application.routes.db"):
+        resp = csrf_client.post("/purge", data={"before": "2026-01-01"})
+
+    assert resp.status_code == 415
+    E.query.filter.assert_not_called()
+
+
+def test_purge_accepts_json_without_csrf_token(csrf_client):
+    with patch("application.routes.Event") as E, patch("application.routes.db") as db_mock:
+        E.date.__le__.return_value = "before-clause"
+        resp = csrf_client.post("/purge", json={"before": "2026-01-01"})
+
+    assert resp.status_code == 200
+    E.date.__le__.assert_called_once_with("2026-01-01")
+    E.query.filter.assert_called_once_with("before-clause")
+    db_mock.session.commit.assert_called_once()
