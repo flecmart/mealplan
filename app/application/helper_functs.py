@@ -6,6 +6,7 @@ import re
 from flask import flash
 from fractions import Fraction
 from urllib import request
+from urllib.parse import urlparse
 
 from recipe_scrapers import scrape_html
 from recipe_scrapers._exceptions import SchemaOrgException
@@ -231,9 +232,17 @@ def extract_cookidoo_recipe_id(value):
     return match.group(1) if match else None
 
 
+ALLOWED_URL_SCHEMES = ('http', 'https')
+
+def fetch_url(url):
+    if urlparse(url).scheme not in ALLOWED_URL_SCHEMES:
+        raise ValueError(f'Nur http(s)-Links erlaubt: {url}')
+    return request.urlopen(url).read()
+
+
 def scrape_recipe(link, icon, wild_mode=False):
     recipe = RecipeCache(None, None, None, None, None, None, None)
-    html = request.urlopen(link).read()
+    html = fetch_url(link)
     scraper = scrape_html(html, org_url=link, wild_mode=wild_mode)
     
     recipe.name = scraper.title()

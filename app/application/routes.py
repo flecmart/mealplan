@@ -5,8 +5,8 @@ import json
 import time
 
 from datetime import datetime, timedelta
-from io import BytesIO
-from urllib.request import urlopen
+from urllib.parse import urlparse
+from flask_wtf.csrf import CSRFError
 from flask import current_app, request, flash, render_template, jsonify, redirect, session
 from sqlalchemy import and_
 from todoist_api_python.api import TodoistAPI
@@ -15,6 +15,7 @@ from selenium.webdriver.chrome.options import Options
 from PIL import Image
 from collections import defaultdict
 
+from application import csrf
 from application import database
 from application import helper_functs
 from application.models import db, Recipe, Event
@@ -31,6 +32,29 @@ ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif'])
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+@current_app.before_request
+def keep_session_across_browser_restarts():
+    session.permanent = True
+
+@current_app.errorhandler(CSRFError)
+def recover_from_csrf_error(error):
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return jsonify(success=False, error='csrf'), 400
+    flash('Sitzung abgelaufen, bitte nochmal versuchen.', 'negative')
+    referrer = request.referrer or ''
+    if urlparse(referrer).netloc == request.host:
+        return redirect(referrer)
+    return redirect(url_for('cal_display'))
+
+ICON_DIR = os.path.join(current_app.static_folder, 'images')
+
+def is_known_icon(icon):
+    return icon in os.listdir(ICON_DIR)
+
+def redirect_unknown_icon(icon, endpoint):
+    flash(f'Unbekanntes Icon: {icon}', 'negative')
+    return redirect(url_for(endpoint))
 
 def bust_cache_url_for(endpoint, **values):
     if endpoint == 'static':
@@ -109,6 +133,8 @@ def add_recipe():
 
     if icon == '':
         icon = 'defaultIcon.png'
+    elif not is_known_icon(icon):
+        return redirect_unknown_icon(icon, 'cal_display')
 
     # if user does not select file, browser also submit an empty part without filename
     if image.filename == '':
@@ -126,7 +152,10 @@ def add_recipe():
 def import_recipe():
     link = request.form['link']
     icon = request.form['icon']
-    
+
+    if icon and not is_known_icon(icon):
+        return redirect_unknown_icon(icon, 'cal_display')
+
     try:
         # scrape with recipe_scraper
         recipe = helper_functs.scrape_recipe(link, icon)
@@ -138,8 +167,8 @@ def import_recipe():
                               ingredients=str(recipe.ingredients),
                               instructions=recipe.instructions,
                               time=int(recipe.time),
-                              icon=recipe.icon, 
-                              image=BytesIO(urlopen(recipe.image_url).read()).read())
+                              icon=recipe.icon,
+                              image=helper_functs.fetch_url(recipe.image_url))
         flash(f'Rezept {recipe.name} gespeichert.', 'positive')
     except Exception as ex:
         try:
@@ -164,14 +193,19 @@ def import_cookidoo_instructions():
     instructions = request.form['instructions']
     recipe = session.get('import_recipe_cache')
     if recipe != None:
+        try:
+            image = helper_functs.fetch_url(recipe['image_url'])
+        except ValueError as ex:
+            flash(f'Rezept konnte nicht gespeichert werden: {ex}', 'negative')
+            return redirect(url_for('cal_display'))
         recipe['instructions'] = replace_thermomix_symbols(instructions)
         database.add_instance(Recipe,
                               name=recipe['name'],
                               ingredients=str(recipe['ingredients']),
                               instructions=recipe['instructions'],
                               time=int(recipe['time']),
-                              icon=recipe['icon'], 
-                              image=BytesIO(urlopen(recipe['image_url']).read()).read(),
+                              icon=recipe['icon'],
+                              image=image,
                               cookidoo_recipe_id=helper_functs.extract_cookidoo_recipe_id(recipe['cookidoo_id'] or ''))
         session['import_recipe_cache'] = None # reset cache
         flash(f'Rezept {recipe["name"]} gespeichert.', 'positive')
@@ -205,6 +239,9 @@ def edit_recipe():
 
     ingredients = ';'.join(ingredients.splitlines())
 
+    if icon and not is_known_icon(icon):
+        return redirect_unknown_icon(icon, 'display_index')
+
     # cookidoo link/id: accept either a full recipe URL (extract the id) or a bare id.
     # editing it clears any stale-link warning so the user can fix broken links here.
     raw_cookidoo = request.form.get('cookidoo_recipe_id', '').strip()
@@ -220,14 +257,18 @@ def edit_recipe():
         flash(f'Das Rezept {name} existiert bereits.', 'negative')
         return redirect(url_for('display_index'))
 
+    fields = dict(name=name, ingredients=str(ingredients), instructions=instructions, time=int(time), cookidoo_recipe_id=cookidoo_id, cookidoo_sync_error=False)
+    if icon:
+        fields['icon'] = icon
+
     # if user does not select file, browser also submit an empty part without filename
     if image.filename == '':
-        database.update_instance(Recipe, recipe_id, name=name, ingredients=str(ingredients), instructions=instructions, time=int(time), icon=icon, cookidoo_recipe_id=cookidoo_id, cookidoo_sync_error=False)
+        database.update_instance(Recipe, recipe_id, **fields)
     elif not allowed_file(image.filename):
         flash(f'Nur folgende Dateiformate für Bilder erlaubt: {ALLOWED_EXTENSIONS}.', 'negative')
         return redirect(url_for('display_index'))
     else:
-        database.update_instance(Recipe, recipe_id, name=name, ingredients=str(ingredients), instructions=instructions, time=int(time), icon=icon, image=image.read(), cookidoo_recipe_id=cookidoo_id, cookidoo_sync_error=False)
+        database.update_instance(Recipe, recipe_id, image=image.read(), **fields)
         
     flash(f'Rezept {name} gespeichert.', 'positive')
     return redirect(url_for('display_index'))
@@ -306,6 +347,7 @@ def delete_meal_event():
     return redirect(url_for('cal_display'))
 
 @current_app.post("/internal/cookidoo-sync-status")
+@csrf.exempt
 def cookidoo_sync_status():
     """Internal endpoint the Celery worker calls to flag a stale Cookidoo link.
 
@@ -314,7 +356,7 @@ def cookidoo_sync_status():
     the recipe's ``cookidoo_sync_error`` flag. Marking is non-destructive: the
     ``cookidoo_recipe_id`` itself is never touched, only the warning flag.
     """
-    payload = request.get_json(silent=True) or request.form
+    payload = request.get_json() or {}
     cookidoo_id = (payload.get('cookidoo_id') or '').strip()
     stale = str(payload.get('stale')).lower() in ('1', 'true', 'yes')
 
@@ -390,24 +432,26 @@ def screenshot_week():
     driver.find_element('xpath', '//*[@id="calendar"]/div[1]/div[2]/div/button[2]').click()
     time.sleep(3)
     element = driver.find_element('xpath', '//*[@id="calendar"]/div[2]')
-    success = element.screenshot('/home/mealplan/application/static/week.png')
+    screenshot_path = os.path.join(current_app.static_folder, 'week.png')
+    success = element.screenshot(screenshot_path)
     if not success:
         print(f'could not save screenshot due to permission errors')
-    im = Image.open('/home/mealplan/application/static/week.png').convert('L')
+    im = Image.open(screenshot_path).convert('L')
     im = im.resize((800,600))
     im = im.rotate(90, expand=True)
-    im.save('/home/mealplan/application/static/week.png')
+    im.save(screenshot_path)
     driver.quit()
     return redirect(bust_cache_url_for('static', filename='week.png'))
 
-@current_app.route("/purge")
+@current_app.post("/purge")
+@csrf.exempt
 def purge_events():
     """
     Purge old events from calender.
-    Possible Query parameter: before=yyyy-mm-dd
+    Expects a JSON body; optional key: {"before": "yyyy-mm-dd"}
     Default behavior: purge events older than 6 months
     """
-    before_date = request.args.get('before')
+    before_date = (request.get_json() or {}).get('before')
 
     if before_date == 'undefined' or before_date is None:
         before_date = helper_functs.get_date_six_months_ago()

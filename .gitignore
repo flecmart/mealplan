@@ -135,3 +135,4 @@ environment.conf
 
 # local vscode settings
 .vscode
+app/application/static/week.png
