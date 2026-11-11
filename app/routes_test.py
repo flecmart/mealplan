@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from flask import Flask
 from application import create_app  # Assuming your Flask app factory is here
+from application import helper_functs
 
 
 def _dev_server_reachable(url, timeout=2):
@@ -160,3 +161,38 @@ def test_edit_recipe_keeps_bare_id(client):
 def test_edit_recipe_empty_cookidoo_clears_id(client):
     update_instance = _edit_recipe(client, "")
     assert update_instance.call_args.kwargs["cookidoo_recipe_id"] is None
+
+
+@pytest.fixture
+def secret_file_url(tmp_path):
+    secret = tmp_path / "secret"
+    secret.write_bytes(b"TOP-SECRET")
+    return f"{secret.as_uri()}#https://example.com/"
+
+
+def _saved_images(add_instance):
+    return [c.kwargs.get("image") for c in add_instance.call_args_list]
+
+
+def test_import_recipe_refuses_file_image_url(client, secret_file_url):
+    scraped = helper_functs.RecipeCache(
+        name="Rezept", time=20, ingredients="Ei", instructions="kochen",
+        icon="egg.png", image_url=secret_file_url, cookidoo_id=None)
+    with patch("application.routes.helper_functs.scrape_recipe", return_value=scraped), \
+         patch("application.routes.database.add_instance") as add_instance:
+        client.post("/import-recipe", data={"link": "https://example.com/r", "icon": "egg.png"})
+
+    assert b"TOP-SECRET" not in _saved_images(add_instance)
+
+
+def test_import_cookidoo_instructions_refuses_file_image_url(client, secret_file_url):
+    with client.session_transaction() as session:
+        session["import_recipe_cache"] = {
+            "name": "Rezept", "time": 20, "ingredients": "Ei", "instructions": "",
+            "icon": "egg.png", "image_url": secret_file_url, "cookidoo_id": None,
+        }
+    with patch("application.routes.database.add_instance") as add_instance:
+        resp = client.post("/import-cookidoo-instructions", data={"instructions": "kochen"})
+
+    assert resp.status_code == 302
+    assert b"TOP-SECRET" not in _saved_images(add_instance)

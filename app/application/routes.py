@@ -5,8 +5,6 @@ import json
 import time
 
 from datetime import datetime, timedelta
-from io import BytesIO
-from urllib.request import urlopen
 from flask import current_app, request, flash, render_template, jsonify, redirect, session
 from sqlalchemy import and_
 from todoist_api_python.api import TodoistAPI
@@ -138,8 +136,8 @@ def import_recipe():
                               ingredients=str(recipe.ingredients),
                               instructions=recipe.instructions,
                               time=int(recipe.time),
-                              icon=recipe.icon, 
-                              image=BytesIO(urlopen(recipe.image_url).read()).read())
+                              icon=recipe.icon,
+                              image=helper_functs.fetch_url(recipe.image_url))
         flash(f'Rezept {recipe.name} gespeichert.', 'positive')
     except Exception as ex:
         try:
@@ -164,14 +162,19 @@ def import_cookidoo_instructions():
     instructions = request.form['instructions']
     recipe = session.get('import_recipe_cache')
     if recipe != None:
+        try:
+            image = helper_functs.fetch_url(recipe['image_url'])
+        except ValueError as ex:
+            flash(f'Rezept konnte nicht gespeichert werden: {ex}', 'negative')
+            return redirect(url_for('cal_display'))
         recipe['instructions'] = replace_thermomix_symbols(instructions)
         database.add_instance(Recipe,
                               name=recipe['name'],
                               ingredients=str(recipe['ingredients']),
                               instructions=recipe['instructions'],
                               time=int(recipe['time']),
-                              icon=recipe['icon'], 
-                              image=BytesIO(urlopen(recipe['image_url']).read()).read(),
+                              icon=recipe['icon'],
+                              image=image,
                               cookidoo_recipe_id=helper_functs.extract_cookidoo_recipe_id(recipe['cookidoo_id'] or ''))
         session['import_recipe_cache'] = None # reset cache
         flash(f'Rezept {recipe["name"]} gespeichert.', 'positive')
