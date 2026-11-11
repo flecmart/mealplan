@@ -30,6 +30,15 @@ ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif'])
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+ICON_DIR = os.path.join(current_app.static_folder, 'images')
+
+def is_known_icon(icon):
+    return icon in os.listdir(ICON_DIR)
+
+def redirect_unknown_icon(icon, endpoint):
+    flash(f'Unbekanntes Icon: {icon}', 'negative')
+    return redirect(url_for(endpoint))
+
 def bust_cache_url_for(endpoint, **values):
     if endpoint == 'static':
         filename = values.get('filename', None)
@@ -107,6 +116,8 @@ def add_recipe():
 
     if icon == '':
         icon = 'defaultIcon.png'
+    elif not is_known_icon(icon):
+        return redirect_unknown_icon(icon, 'cal_display')
 
     # if user does not select file, browser also submit an empty part without filename
     if image.filename == '':
@@ -124,7 +135,10 @@ def add_recipe():
 def import_recipe():
     link = request.form['link']
     icon = request.form['icon']
-    
+
+    if icon and not is_known_icon(icon):
+        return redirect_unknown_icon(icon, 'cal_display')
+
     try:
         # scrape with recipe_scraper
         recipe = helper_functs.scrape_recipe(link, icon)
@@ -207,6 +221,9 @@ def edit_recipe():
         return redirect(url_for('display_index'))
 
     ingredients = ';'.join(ingredients.splitlines())
+
+    if icon and not is_known_icon(icon):
+        return redirect_unknown_icon(icon, 'display_index')
 
     # cookidoo link/id: accept either a full recipe URL (extract the id) or a bare id.
     # editing it clears any stale-link warning so the user can fix broken links here.

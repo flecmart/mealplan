@@ -1,5 +1,8 @@
+import html
 import io
+import json
 import os
+import re
 import urllib.request
 from unittest.mock import MagicMock, patch
 
@@ -7,6 +10,7 @@ import pytest
 from flask import Flask
 from application import create_app  # Assuming your Flask app factory is here
 from application import helper_functs
+from application.models import Recipe
 
 
 def _dev_server_reachable(url, timeout=2):
@@ -130,14 +134,14 @@ def test_internal_sync_status_missing_id_returns_400(client):
 
 # --- editing the cookidoo id via the edit-recipe form (DB mocked) ------------
 
-def _edit_recipe(client, cookidoo_value):
+def _edit_recipe(client, cookidoo_value, icon="pasta.png"):
     with patch("application.routes.database.update_instance") as update_instance, \
          patch("application.routes.Recipe") as R:
         R.query.filter_by.return_value.first.return_value = None  # no name clash
         client.post("/edit-recipe", data={
             "id": "1", "name": "Testrezept", "time": "20",
             "ingredients": "Mehl\nZucker", "instructions": "verrühren",
-            "icon": "pasta.png",
+            "icon": icon,
             "cookidoo_recipe_id": cookidoo_value,
             "image": (io.BytesIO(b""), ""),
         }, content_type="multipart/form-data")
@@ -196,3 +200,59 @@ def test_import_cookidoo_instructions_refuses_file_image_url(client, secret_file
 
     assert resp.status_code == 302
     assert b"TOP-SECRET" not in _saved_images(add_instance)
+
+
+XSS_ICON = 'x"onerror="alert(1)'
+
+
+def _add_recipe(client, icon):
+    with patch("application.routes.database.add_instance") as add_instance, \
+         patch("application.routes.Recipe") as R:
+        R.query.filter_by.return_value.first.return_value = None
+        client.post("/add-recipe", data={
+            "name": "Testrezept", "time": "20",
+            "ingredients": "Mehl", "instructions": "verrühren",
+            "icon": icon,
+            "image": (io.BytesIO(b""), ""),
+        }, content_type="multipart/form-data")
+    return add_instance
+
+
+def test_add_recipe_rejects_unknown_icon(client):
+    assert not _add_recipe(client, XSS_ICON).called
+
+
+def test_add_recipe_accepts_known_icon(client):
+    assert _add_recipe(client, "pasta.png").call_args.kwargs["icon"] == "pasta.png"
+
+
+def test_add_recipe_defaults_empty_icon(client):
+    assert _add_recipe(client, "").call_args.kwargs["icon"] == "defaultIcon.png"
+
+
+def test_edit_recipe_rejects_unknown_icon(client):
+    assert not _edit_recipe(client, "", icon=XSS_ICON).called
+
+
+def test_recipe_page_passes_stored_icon_to_js_as_string_literal(client):
+    stored_icon = "');alert(1)//"
+    page = _recipe_page(client, icon=stored_icon)
+
+    handler = re.search(r"""onclick=(["'])setPreselectedIcon\((.*?)\)\1""", page)
+    assert json.loads(html.unescape(handler.group(2))) == stored_icon
+
+
+def test_import_recipe_rejects_unknown_icon(client):
+    with patch("application.routes.helper_functs.scrape_recipe") as scrape_recipe:
+        client.post("/import-recipe", data={"link": "https://example.com/r", "icon": XSS_ICON})
+
+    assert not scrape_recipe.called
+
+
+def _recipe_page(client, icon="egg.png"):
+    recipe = Recipe(name="Rezept", ingredients="Ei", instructions="kochen", time=20,
+                    icon=icon, image=None, cookidoo_recipe_id=None)
+    recipe.id = 1
+    with patch("application.routes.Recipe") as R:
+        R.query.filter_by.return_value.first.return_value = recipe
+        return client.get("/recipe/1").get_data(as_text=True)
