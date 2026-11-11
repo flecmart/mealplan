@@ -240,14 +240,18 @@ def edit_recipe():
         flash(f'Das Rezept {name} existiert bereits.', 'negative')
         return redirect(url_for('display_index'))
 
+    fields = dict(name=name, ingredients=str(ingredients), instructions=instructions, time=int(time), cookidoo_recipe_id=cookidoo_id, cookidoo_sync_error=False)
+    if icon:
+        fields['icon'] = icon
+
     # if user does not select file, browser also submit an empty part without filename
     if image.filename == '':
-        database.update_instance(Recipe, recipe_id, name=name, ingredients=str(ingredients), instructions=instructions, time=int(time), icon=icon, cookidoo_recipe_id=cookidoo_id, cookidoo_sync_error=False)
+        database.update_instance(Recipe, recipe_id, **fields)
     elif not allowed_file(image.filename):
         flash(f'Nur folgende Dateiformate für Bilder erlaubt: {ALLOWED_EXTENSIONS}.', 'negative')
         return redirect(url_for('display_index'))
     else:
-        database.update_instance(Recipe, recipe_id, name=name, ingredients=str(ingredients), instructions=instructions, time=int(time), icon=icon, image=image.read(), cookidoo_recipe_id=cookidoo_id, cookidoo_sync_error=False)
+        database.update_instance(Recipe, recipe_id, image=image.read(), **fields)
         
     flash(f'Rezept {name} gespeichert.', 'positive')
     return redirect(url_for('display_index'))

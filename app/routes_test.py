@@ -230,6 +230,10 @@ def test_add_recipe_defaults_empty_icon(client):
     assert _add_recipe(client, "").call_args.kwargs["icon"] == "defaultIcon.png"
 
 
+def test_edit_recipe_without_icon_keeps_current_icon(client):
+    assert "icon" not in _edit_recipe(client, "", icon="").call_args.kwargs
+
+
 def test_edit_recipe_rejects_unknown_icon(client):
     assert not _edit_recipe(client, "", icon=XSS_ICON).called
 
